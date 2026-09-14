@@ -2,9 +2,9 @@ import cors from 'cors';
 import express, { type Express, type Request, type Response } from 'express';
 import { pinoHttp } from 'pino-http';
 
-import logger from '@/config/logger.js';
-import { notFoundMiddleware } from './middleware/not-found.middleware.js';
-import { errorMiddleware } from './middleware/error.middleware.js';
+import logger from '@config/logger.js';
+import { notFoundMiddleware } from '@middlewares/not-found.middleware.js';
+import { errorMiddleware } from '@middlewares/error.middleware.js';
 
 const app: Express = express();
 
