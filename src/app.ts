@@ -1,7 +1,10 @@
 import cors from 'cors';
 import express, { type Express, type Request, type Response } from 'express';
 import { pinoHttp } from 'pino-http';
+
 import logger from '@/config/logger.js';
+import { notFoundMiddleware } from './middleware/not-found.middleware.js';
+import { errorMiddleware } from './middleware/error.middleware.js';
 
 const app: Express = express();
 
@@ -16,5 +19,8 @@ app.get('/api/health', (_req: Request, res: Response) => {
     message: 'JobFolio API is running',
   });
 });
+
+app.use(notFoundMiddleware);
+app.use(errorMiddleware);
 
 export default app;
