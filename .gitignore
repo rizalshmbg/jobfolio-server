@@ -12,6 +12,9 @@ dist/
 # Prisma generated client
 src/generated/prisma/
 
+# Session SQL
+jobfolio.session.sql
+
 # Logs
 *.log
 logs/
