@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from 'express';
 
-import { AppError } from '@errors/app-error.js';
-import logger from '@config/logger.js';
+import { AppError } from '../errors/app-error.js';
+import logger from '../config/logger.js';
 
 export const errorMiddleware: ErrorRequestHandler = (
   error,
