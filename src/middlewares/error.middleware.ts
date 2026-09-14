@@ -1,7 +1,7 @@
 import type { ErrorRequestHandler } from 'express';
 
-import { AppError } from '@/errors/app-error.js';
-import logger from '@/config/logger.js';
+import { AppError } from '@errors/app-error.js';
+import logger from '@config/logger.js';
 
 export const errorMiddleware: ErrorRequestHandler = (
   error,
@@ -10,7 +10,7 @@ export const errorMiddleware: ErrorRequestHandler = (
   _next,
 ) => {
   if (error instanceof AppError) {
-    res.status(error.status_code).json({
+    res.status(error.statusCode).json({
       success: false,
       message: error.message,
     });
