@@ -43,6 +43,7 @@
 
     // Paths
     "paths": {
+      "@/*": ["./src/*"],
       "@config/*": ["./src/config/*"]
     }
   },
