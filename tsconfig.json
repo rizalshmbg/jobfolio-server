@@ -47,6 +47,7 @@
       "@config/*": ["./src/config/*"],
       "@errors/*": ["./src/errors/*"],
       "@middlewares/*": ["./src/middlewares/*"],
+      "@tests/*": ["./src/tests/*"],
     }
   },
   "include": ["src"],
