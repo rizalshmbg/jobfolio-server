@@ -5,7 +5,7 @@ import bcrypt from "bcrypt";
 import app from '../app.js';
 import { cleanDatabase, disconnectDatabase } from './helpers/database.js'; 
 import prisma from '../config/prisma.js';
-import { createTestUser } from './helpers/user.js';
+import { testUser, createTestUser } from './helpers/user.js';
 
 describe('POST /api/auth/register', () => {
   beforeEach(cleanDatabase);
@@ -101,16 +101,16 @@ describe("POST /api/auth/login", () => {
     await createTestUser();
 
     const response = await request(app).post('/api/auth/login').send({
-      email: 'test@example.com',
-      password: 'password123',
+      email: testUser.email,
+      password: testUser.password,
     });
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.message).toBe('Login successful');
     expect(response.body.data.user).toMatchObject({
-      name: 'Test User',
-      email: 'test@example.com',
+      name: testUser.name,
+      email: testUser.email,
     });
     expect(response.body.data.accessToken).toBeDefined();
     expect(response.body.data.user).not.toHaveProperty('password');
@@ -123,7 +123,7 @@ describe("POST /api/auth/login", () => {
     await createTestUser();
 
     const response = await request(app).post('/api/auth/login').send({
-      email: 'test@example.com',
+      email: testUser.email,
       password: 'wrongpassword',
     });
 
@@ -135,7 +135,7 @@ describe("POST /api/auth/login", () => {
   it('should return 401 when email is not registered', async () => {
     const response = await request(app).post('/api/auth/login').send({
       email: 'notfound@example.com',
-      password: 'password123',
+      password: testUser.password,
     });
 
     expect(response.status).toBe(401);
