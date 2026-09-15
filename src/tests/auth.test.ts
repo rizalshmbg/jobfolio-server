@@ -5,6 +5,7 @@ import bcrypt from "bcrypt";
 import app from '../app.js';
 import { cleanDatabase, disconnectDatabase } from './helpers/database.js'; 
 import prisma from '../config/prisma.js';
+import { createTestUser } from './helpers/user.js';
 
 describe('POST /api/auth/register', () => {
   beforeEach(cleanDatabase);
@@ -90,5 +91,55 @@ describe('POST /api/auth/register', () => {
     const userCount = await prisma.user.count();
 
     expect(userCount).toBe(1);
+  });
+});
+
+describe("POST /api/auth/login", () => {
+  beforeEach(cleanDatabase);
+
+  it("should login successfully", async () => {
+    await createTestUser();
+
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'test@example.com',
+      password: 'password123',
+    });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Login successful');
+    expect(response.body.data.user).toMatchObject({
+      name: 'Test User',
+      email: 'test@example.com',
+    });
+    expect(response.body.data.accessToken).toBeDefined();
+    expect(response.body.data.user).not.toHaveProperty('password');
+    expect(response.body.data.accessToken).toEqual(
+      expect.any(String),
+    );
+  });
+
+  it('should return 401 when password is incorrect', async () => {
+    await createTestUser();
+
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'test@example.com',
+      password: 'wrongpassword',
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Email or password is incorrect');
+  });
+
+  it('should return 401 when email is not registered', async () => {
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'notfound@example.com',
+      password: 'password123',
+    });
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Email or password is incorrect');
   });
 });
