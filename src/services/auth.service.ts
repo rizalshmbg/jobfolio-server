@@ -1,8 +1,9 @@
 import bcrypt from 'bcrypt';
 
 import prisma from '../config/prisma.js';
-import type { RegisterInput } from '../validations/auth.validations.js';
+import type { RegisterInput, LoginInput } from '../validations/auth.validations.js';
 import { AppError } from '../errors/app-error.js';
+import { generateAccessToken } from '../utils/jwt.js';
 
 export const register = async (data: RegisterInput) => {
   // check if user already exists
@@ -37,4 +38,46 @@ export const register = async (data: RegisterInput) => {
   });
 
   return user;
+}
+
+export const login = async (data: LoginInput) => {
+  // check if user exists
+  const user = await prisma.user.findUnique({
+    where: {
+      email: data.email,
+    },
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      password: true,
+    },
+  });
+
+  // if user does not exist
+  if(!user) {
+    throw new AppError(401, 'Email or password is incorrect');
+  }
+
+  // compare password
+  const isPasswordValid = await bcrypt.compare(data.password, user.password);
+
+  // if password is not valid
+  if(!isPasswordValid) {
+    throw new AppError(401, 'Email or password is incorrect');
+  }
+
+  // generate access token
+  const accessToken = generateAccessToken({
+    userId: user.id,
+  });
+
+  return {
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+    },
+    accessToken,
+  };
 }
