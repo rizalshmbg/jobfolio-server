@@ -2,9 +2,9 @@ import request from 'supertest';
 import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import bcrypt from "bcrypt";
 
-import app from '../app.js';
-import { cleanDatabase, disconnectDatabase } from './helpers/database.js'; 
-import prisma from '../config/prisma.js';
+import app from '../src/app.js';
+import { cleanDatabase, disconnectDatabase } from './helpers/database.js';
+import prisma from '../src/config/prisma.js';
 import { testUser, createTestUser } from './helpers/user.js';
 
 describe('POST /api/auth/register', () => {

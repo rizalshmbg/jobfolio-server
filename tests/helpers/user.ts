@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import prisma from '../../config/prisma.js';
+import prisma from '../../src/config/prisma.js';
 
 export const testUser = {
   name: 'Test User',
