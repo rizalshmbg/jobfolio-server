@@ -7,6 +7,7 @@ import { cleanDatabase, disconnectDatabase } from './helpers/database.js';
 import prisma from '../src/config/prisma.js';
 import { testUser, createTestUser } from './helpers/user.js';
 import { generateAccessToken } from '../src/utils/jwt.js';
+import { hashRefreshToken } from '../src/utils/refresh-token.js';
 
 beforeEach(cleanDatabase);
 afterAll(disconnectDatabase);
@@ -116,6 +117,52 @@ describe("POST /api/auth/login", () => {
     expect(response.body.data.user).not.toHaveProperty('password');
     expect(response.body.data.accessToken).toEqual(
       expect.any(String),
+    );
+    expect(response.body.data).not.toHaveProperty('refreshToken');
+
+
+    // Cookie check
+    const refreshCookie = response.headers['set-cookie']?.[0];
+
+    if (!refreshCookie) {
+      throw new Error('Refresh token cookie was not set');
+    }
+
+    expect(refreshCookie).toBeDefined();
+    expect(refreshCookie).toContain('refreshToken=');
+    expect(refreshCookie).toContain('HttpOnly');
+
+
+    // raw refresh token
+    const rawRefreshToken = refreshCookie.split(';')[0]?.split('=')[1];
+
+    if (!rawRefreshToken) {
+      throw new Error(
+        'Refresh token was not found in cookie',
+      );
+    }
+
+    // Session check
+    const session = await prisma.session.findFirst({
+      where: {
+        user: {
+          email: testUser.email,
+        },
+      },
+    });
+
+    // if session was not created
+    if (!session) {
+      throw new Error('Session was not created');
+    }
+
+    expect(session).not.toBeNull();
+    expect(session?.expiresAt.getTime()).toBeGreaterThan(
+      Date.now(),
+    );
+    expect(session.tokenHash).not.toBe(rawRefreshToken)
+    expect(session.tokenHash).toBe(
+      hashRefreshToken(rawRefreshToken),
     );
   });
 
