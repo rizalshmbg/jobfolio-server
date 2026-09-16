@@ -116,3 +116,56 @@ export const getMe = async (userId: string) => {
 
   return user;
 }
+
+export const refreshAccessToken = async (refreshToken: string) => {
+  // hashing refresh token
+  const tokenHash = hashRefreshToken(refreshToken);
+
+  // check if session exists
+  const session = await prisma.session.findUnique({
+    where: {
+      tokenHash,
+    },
+  });
+
+  // if session does not exist
+  if (!session) {
+    throw new AppError(401, 'Unauthorized');
+  }
+
+  // check if session is expired
+  if (session.expiresAt <= new Date()) {
+    await prisma.session.delete({
+      where: {
+        id: session.id,
+      },
+    });
+
+    throw new AppError(401, 'Unauthorized');
+  }
+
+  // generate new access token
+  const newAccessToken = generateAccessToken({
+    userId: session.userId,
+  });
+
+  const newRefreshToken = generateRefreshToken();
+  const newTokenHash = hashRefreshToken(newRefreshToken);
+  const newExpiresAt = getRefreshTokenExpiry();
+
+  // update session
+  await prisma.session.update({
+    where: {
+      id: session.id,
+    },
+    data: {
+      tokenHash: newTokenHash,
+      expiresAt: newExpiresAt,
+    },
+  });
+
+  return {
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  }
+}
