@@ -10,6 +10,7 @@ import {
   loginController,
   getMeController,
   refreshAccessTokenController,
+  logoutController,
 } from '../controllers/auth.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 
@@ -19,5 +20,6 @@ router.post('/register', validate(registerSchema), registerController);
 router.post('/login', validate(loginSchema), loginController);
 router.get('/me', authMiddleware, getMeController);
 router.post('/refresh-access-token', refreshAccessTokenController)
+router.post('/logout', logoutController);
 
 export default router;
