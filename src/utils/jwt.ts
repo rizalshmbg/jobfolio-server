@@ -11,3 +11,7 @@ export const generateAccessToken = (payload: AccessTokenPayload) => {
     expiresIn: '15m',
   });
 };
+
+export const verifyAccessToken = (token: string) => {
+  return jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
+}
