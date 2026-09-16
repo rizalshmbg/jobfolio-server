@@ -5,6 +5,7 @@ import {
   login,
   getMe,
   refreshAccessToken,
+  logout,
 } from '../services/auth.service.js';
 import type {
   RegisterInput,
@@ -76,5 +77,27 @@ export const refreshAccessTokenController: RequestHandler = async (
     data: {
       accessToken: result.accessToken,
     },
+  });
+};
+
+export const logoutController: RequestHandler = async (
+  req,
+  res,
+) => {
+  const refreshToken = req.cookies.refreshToken;
+
+  if (refreshToken) {
+    await logout(refreshToken);
+  }
+
+  res.clearCookie('refreshToken', {
+    httpOnly: true,
+    secure: env.NODE_ENV === 'production',
+    sameSite: 'lax',
+  });
+
+  res.status(200).json({
+    success: true,
+    message: 'Logout successful',
   });
 };
