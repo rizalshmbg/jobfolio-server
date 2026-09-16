@@ -328,3 +328,58 @@ describe("POST /api/auth/refresh-access-token", () => {
     expect(reuseResponse.body.message).toBe('Unauthorized');
   });
 });
+
+describe('POST /api/auth/logout', () => {
+  it('should logout successfully', async () => {
+    await createTestUser();
+
+    const agent = request.agent(app);
+
+    const loginResponse = await agent
+      .post('/api/auth/login')
+      .send({
+        email: testUser.email,
+        password: testUser.password,
+      });
+
+    expect(loginResponse.status).toBe(200);
+
+    const sessionBeforeLogout = await prisma.session.findFirst();
+
+    expect(sessionBeforeLogout).not.toBeNull();
+
+    const response = await agent.post('/api/auth/logout');
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Logout successful');
+
+    const sessionAfterLogout = await prisma.session.findFirst();
+
+    expect(sessionAfterLogout).toBeNull();
+
+    // get logout cookie
+    const logoutCookie = response.headers['set-cookie']?.[0];
+
+    if (!logoutCookie) {
+      throw new Error('Refresh token cookie was not cleared');
+    }
+
+    expect(logoutCookie).toContain('refreshToken=');
+
+    // refresh token after logout
+    const refreshResponse = await agent.post('/api/auth/refresh-access-token');
+
+    expect(refreshResponse.status).toBe(401);
+    expect(refreshResponse.body.success).toBe(false);
+    expect(refreshResponse.body.message).toBe('Unauthorized');
+  });
+
+  it('should return 200 when refresh token is missing', async () => {
+    const response = await request(app).post('/api/auth/logout');
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Logout successful');
+  });
+});
