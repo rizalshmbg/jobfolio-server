@@ -169,3 +169,13 @@ export const refreshAccessToken = async (refreshToken: string) => {
     refreshToken: newRefreshToken,
   }
 }
+
+export const logout = async (refreshToken: string) => {
+  const tokenHash = hashRefreshToken(refreshToken);
+
+  await prisma.session.deleteMany({
+    where: {
+      tokenHash,
+    },
+  });
+}
