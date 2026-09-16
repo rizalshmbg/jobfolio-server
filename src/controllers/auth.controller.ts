@@ -1,7 +1,10 @@
 import type { RequestHandler } from 'express';
 
-import { register, login } from '../services/auth.service.js';
-import type { RegisterInput, LoginInput } from '../validations/auth.validations.js';
+import { register, login, getMe } from '../services/auth.service.js';
+import type {
+  RegisterInput,
+  LoginInput,
+} from '../validations/auth.validations.js';
 
 export const registerController: RequestHandler = async (req, res) => {
   const user = await register(req.body as RegisterInput);
@@ -18,7 +21,17 @@ export const loginController: RequestHandler = async (req, res) => {
 
   res.status(200).json({
     success: true,
-    message: "Login successful",
+    message: 'Login successful',
     data: result,
+  });
+};
+
+export const getMeController: RequestHandler = async (req, res) => {
+  const user = await getMe(req.user!.userId);
+
+  res.status(200).json({
+    success: true,
+    message: 'User retrieved successfully',
+    data: user,
   });
 };
