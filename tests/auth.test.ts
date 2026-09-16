@@ -231,3 +231,100 @@ describe("GET /api/auth/me", () => {
     expect(response.body.message).toBe('Unauthorized');
   });
 });
+
+describe("POST /api/auth/refresh-access-token", () => {
+  it("should refresh access token successfully", async () => {
+    await createTestUser();
+
+    // create agent because agent have cookie jar
+    const agent = request.agent(app);
+
+    const loginResponse = await agent
+      .post('/api/auth/login')
+      .send({
+        email: testUser.email,
+        password: testUser.password,
+      });
+
+    expect(loginResponse.status).toBe(200);
+
+    // refresh access token
+    const response = await agent.post('/api/auth/refresh-access-token');
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Access token refreshed successfully');
+    expect(response.body.data.accessToken).toEqual(
+      expect.any(String),
+    );
+    expect(response.body.data).not.toHaveProperty(
+      'refreshToken',
+    );
+
+    const refreshCookie = response.headers['set-cookie']?.[0];
+
+    if (!refreshCookie) {
+      throw new Error('New refresh token cookie was not set');
+    }
+
+    expect(refreshCookie).toContain('refreshToken=');
+    expect(refreshCookie).toContain('HttpOnly');
+  });
+
+  it("should return 401 when refresh access token is missing", async () => {
+    const response = await request(app).post('/api/auth/refresh-access-token');
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+
+  it("should return 401 when refresh access token is invalid", async () => {
+    const response = await request(app)
+      .post('/api/auth/refresh-access-token')
+      .set('Cookie', 'refreshToken=invalid-token');
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+
+  it("should invalidate old refresh token after rotation", async () => {
+    await createTestUser();
+
+    // login and get access token
+    const loginResponse = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: testUser.email,
+        password: testUser.password,
+      });
+
+    expect(loginResponse.status).toBe(200);
+
+    // get old refresh cookie
+    const oldRefreshCookie = loginResponse.headers['set-cookie']?.[0];
+
+    // if old refresh cookie is not set
+    if (!oldRefreshCookie) {
+      throw new Error('Refresh token cookie was not set');
+    }
+
+    // refresh access token with old refresh cookie
+    const refreshResponse = await request(app)
+      .post('/api/auth/refresh-access-token')
+      .set('Cookie', oldRefreshCookie);
+
+    // expect refresh response
+    expect(refreshResponse.status).toBe(200);
+
+    // reuse old refresh token
+    const reuseResponse = await request(app)
+      .post('/api/auth/refresh-access-token')
+      .set('Cookie', oldRefreshCookie);
+
+    expect(reuseResponse.status).toBe(401);
+    expect(reuseResponse.body.success).toBe(false);
+    expect(reuseResponse.body.message).toBe('Unauthorized');
+  });
+});
