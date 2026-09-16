@@ -4,6 +4,7 @@ import prisma from '../config/prisma.js';
 import type { RegisterInput, LoginInput } from '../validations/auth.validations.js';
 import { AppError } from '../errors/app-error.js';
 import { generateAccessToken } from '../utils/jwt.js';
+import { generateRefreshToken, getRefreshTokenExpiry, hashRefreshToken } from '../utils/refresh-token.js';
 
 export const register = async (data: RegisterInput) => {
   // check if user already exists
@@ -72,6 +73,18 @@ export const login = async (data: LoginInput) => {
     userId: user.id,
   });
 
+  const refreshToken = generateRefreshToken();
+  const tokenHash = hashRefreshToken(refreshToken);
+  const expiresAt = getRefreshTokenExpiry();
+
+  await prisma.session.create({
+    data: {
+      userId: user.id,
+      tokenHash,
+      expiresAt,
+    },
+  });
+
   return {
     user: {
       id: user.id,
@@ -79,6 +92,7 @@ export const login = async (data: LoginInput) => {
       email: user.email,
     },
     accessToken,
+    refreshToken,
   };
 }
 
