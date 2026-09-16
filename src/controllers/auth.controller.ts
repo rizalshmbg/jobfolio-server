@@ -5,6 +5,8 @@ import type {
   RegisterInput,
   LoginInput,
 } from '../validations/auth.validations.js';
+import { env } from '../config/env.js';
+import { REFRESH_TOKEN_TTL_MS } from '../utils/refresh-token.js';
 
 export const registerController: RequestHandler = async (req, res) => {
   const user = await register(req.body as RegisterInput);
@@ -17,12 +19,19 @@ export const registerController: RequestHandler = async (req, res) => {
 };
 
 export const loginController: RequestHandler = async (req, res) => {
-  const result = await login(req.body as LoginInput);
+  const { refreshToken, ...data } = await login(req.body as LoginInput);
+
+  res.cookie('refreshToken', refreshToken, {
+    httpOnly: true,
+    secure: env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: REFRESH_TOKEN_TTL_MS,
+  });
 
   res.status(200).json({
     success: true,
     message: 'Login successful',
-    data: result,
+    data,
   });
 };
 
