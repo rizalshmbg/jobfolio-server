@@ -8,41 +8,43 @@ import prisma from '../src/config/prisma.js';
 import { testUser, createTestUser } from './helpers/user.js';
 import { generateAccessToken } from '../src/utils/jwt.js';
 
+beforeEach(cleanDatabase);
+afterAll(disconnectDatabase);
+
 describe('POST /api/auth/register', () => {
-  beforeEach(cleanDatabase);
-
-  afterAll(disconnectDatabase);
-
   it('should register a new user', async () => {
-    const response = await request(app).post('/api/auth/register').send({
-      name: 'Test User',
-      email: 'test@example.com',
-      password: 'password123',
-    });
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send(testUser);
 
     expect(response.status).toBe(201);
     expect(response.body.success).toBe(true);
     expect(response.body.message).toBe('User registered successfully');
     expect(response.body.data).toMatchObject({
-      name: 'Test User',
-      email: 'test@example.com',
+      name: testUser.name,
+      email: testUser.email,
     });
     expect(response.body.data).not.toHaveProperty('password');
 
     const user = await prisma.user.findUnique({
       where: {
-        email: "test@example.com",
+        email: testUser.email,
       },
     });
 
     expect(user).not.toBeNull();
-    expect(user?.name).toBe("Test User");
-    expect(user?.email).toBe("test@example.com");
-    expect(user?.password).not.toBe("password123");
+
+    if (!user) {
+      throw new Error('User was not created');
+    }
+
+    expect(user.name).toBe(testUser.name);
+    expect(user.email).toBe(testUser.email);
+    expect(user.password).not.toBe(testUser.password);
 
     const isPasswordValid = await bcrypt.compare(
-      "password123",
-      user!.password,
+      testUser.password,
+      user.password,
     );
 
     expect(isPasswordValid).toBe(true);
@@ -50,9 +52,9 @@ describe('POST /api/auth/register', () => {
 
   it('should return 400 when request is invalid', async () => {
     const response = await request(app).post('/api/auth/register').send({
-      name: 'Test User',
+      name: testUser.name,
       email: 'invalid-email',
-      password: 'password123',
+      password: testUser.password,
     });
 
     expect(response.status).toBe(400);
@@ -74,14 +76,14 @@ describe('POST /api/auth/register', () => {
 
   it('should return 409 when email is already registered', async () => {
     await request(app).post('/api/auth/register').send({
-      name: 'Test User',
-      email: 'test@example.com',
-      password: 'password123',
+      name: testUser.name,
+      email: testUser.email,
+      password: testUser.password,
     });
 
     const response = await request(app).post('/api/auth/register').send({
       name: 'Another User',
-      email: 'test@example.com',
+      email: testUser.email,
       password: 'anotherpassword123',
     });
 
@@ -96,8 +98,6 @@ describe('POST /api/auth/register', () => {
 });
 
 describe("POST /api/auth/login", () => {
-  beforeEach(cleanDatabase);
-
   it("should login successfully", async () => {
     await createTestUser();
 
@@ -113,7 +113,6 @@ describe("POST /api/auth/login", () => {
       name: testUser.name,
       email: testUser.email,
     });
-    expect(response.body.data.accessToken).toBeDefined();
     expect(response.body.data.user).not.toHaveProperty('password');
     expect(response.body.data.accessToken).toEqual(
       expect.any(String),
@@ -146,8 +145,6 @@ describe("POST /api/auth/login", () => {
 });
 
 describe("GET /api/auth/me", () => {
-  beforeEach(cleanDatabase);
-
   it("should return current user when access token is valid", async () => {
     const user = await createTestUser();
 
@@ -178,8 +175,6 @@ describe("GET /api/auth/me", () => {
   });
 
   it("should return 401 when access token is invalid", async () => {
-    await createTestUser();
-
     const response = await request(app)
       .get('/api/auth/me')
       .set('Authorization', 'Bearer invalid-token');
