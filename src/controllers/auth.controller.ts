@@ -11,9 +11,8 @@ import type {
   RegisterInput,
   LoginInput,
 } from '../validations/auth.validations.js';
-import { env } from '../config/env.js';
-import { REFRESH_TOKEN_TTL_MS } from '../utils/refresh-token.js';
 import { AppError } from '../errors/app-error.js';
+import { clearRefreshTokenCookieOptions, refreshTokenCookieOptions } from '../config/cookie.js';
 
 export const registerController: RequestHandler = async (req, res) => {
   const user = await register(req.body as RegisterInput);
@@ -28,12 +27,7 @@ export const registerController: RequestHandler = async (req, res) => {
 export const loginController: RequestHandler = async (req, res) => {
   const { refreshToken, ...data } = await login(req.body as LoginInput);
 
-  res.cookie('refreshToken', refreshToken, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: REFRESH_TOKEN_TTL_MS,
-  });
+  res.cookie('refreshToken', refreshToken, refreshTokenCookieOptions);
 
   res.status(200).json({
     success: true,
@@ -64,12 +58,7 @@ export const refreshAccessTokenController: RequestHandler = async (
 
   const result = await refreshAccessToken(refreshToken);
 
-  res.cookie('refreshToken', result.refreshToken, {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-    maxAge: REFRESH_TOKEN_TTL_MS,
-  });
+  res.cookie('refreshToken', result.refreshToken, refreshTokenCookieOptions);
 
   res.status(200).json({
     success: true,
@@ -90,11 +79,7 @@ export const logoutController: RequestHandler = async (
     await logout(refreshToken);
   }
 
-  res.clearCookie('refreshToken', {
-    httpOnly: true,
-    secure: env.NODE_ENV === 'production',
-    sameSite: 'lax',
-  });
+  res.clearCookie('refreshToken', clearRefreshTokenCookieOptions);
 
   res.status(200).json({
     success: true,
