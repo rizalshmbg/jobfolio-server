@@ -169,6 +169,12 @@ describe('GET /api/applications', () => {
       position: testApplication.position,
       status: testApplication.status,
     });
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 1,
+      totalPages: 1,
+    });
   });
 
   it('should only return applications owned by authenticated user', async () => {
@@ -220,6 +226,12 @@ describe('GET /api/applications', () => {
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
     expect(response.body.data).toEqual([]);
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 0,
+      totalPages: 0,
+    });
   });
 
   it('should return 401 when user is not authenticated', async () => {
@@ -228,5 +240,53 @@ describe('GET /api/applications', () => {
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe('Unauthorized');
+  });
+
+  it('should paginate applications', async () => {
+    const user = await createTestUser();
+
+    await Promise.all(
+      Array.from({ length: 15 }, (_, index) =>
+        prisma.application.create({
+          data: {
+            userId: user.id,
+            company: `Company ${index + 1}`,
+            position: 'Frontend Developer',
+          },
+        }),
+      ),
+    );
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?page=2&limit=10')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(5);
+    expect(response.body.meta).toEqual({
+      page: 2,
+      limit: 10,
+      total: 15,
+      totalPages: 2,
+    });
+  });
+
+  it('should return 400 when pagination query is invalid', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?page=0&limit=10')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
   });
 });
