@@ -1,4 +1,4 @@
-import type { NextFunction, Request, Response } from 'express';
+import type { NextFunction, Request, RequestHandler, Response } from 'express';
 import type { ZodType } from 'zod';
 
 export const validate = (schema: ZodType) => {
@@ -13,5 +13,20 @@ export const validate = (schema: ZodType) => {
     req.body = result.data;
 
     next();
-  }
-}
+  };
+};
+
+export const validateQuery =
+  (schema: ZodType): RequestHandler =>
+  (req, _res, next) => {
+    const result = schema.safeParse(req.query);
+
+    if (!result.success) {
+      next(result.error);
+      return;
+    }
+
+    req.validatedQuery = result.data;
+
+    next();
+  };
