@@ -47,3 +47,10 @@ export const createApplicationSchema = z
   );
 
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
+
+export const getApplicationsQuerySchema = z.object({
+  page: z.coerce.number().int().positive().default(1),
+  limit: z.coerce.number().int().positive().max(100).default(10),
+});
+
+export type GetApplicationsQuery = z.infer<typeof getApplicationsQuerySchema>;
