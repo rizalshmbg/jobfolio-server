@@ -20,20 +20,70 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  sessions Session[]
+  sessions     Session[]
+  applications Application[]
 
   @@map("users")
 }
 
 model Session {
-  id String @id @default(uuid())
-  tokenHash String @unique
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
   expiresAt DateTime
   createdAt DateTime @default(now())
 
   userId String
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("sessions")
+}
+
+model Application {
+  id              String            @id @default(uuid())
+  company         String
+  position        String
+  status          ApplicationStatus @default(APPLIED)
+  appliedAt       DateTime?
+  jobUrl          String?
+  location        String?
+  employmentType  EmploymentType?
+  workArrangement WorkArrangement?
+  salaryMin       Int?
+  salaryMax       Int?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([userId, status])
+  @@map("applications")
+}
+
+enum ApplicationStatus {
+  WISHLIST
+  APPLIED
+  SCREENING
+  INTERVIEW
+  TECHNICAL_TEST
+  OFFER
+  REJECTED
+  WITHDRAWN
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  CONTRACT
+  INTERNSHIP
+  FREELANCE
+}
+
+enum WorkArrangement {
+  ONSITE
+  HYBRID
+  REMOTE
 }
