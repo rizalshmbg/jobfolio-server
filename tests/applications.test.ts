@@ -5,7 +5,10 @@ import app from '../src/app.js';
 import prisma from '../src/config/prisma.js';
 import { generateAccessToken } from '../src/utils/jwt.js';
 import { cleanDatabase, disconnectDatabase } from './helpers/database.js';
-import { testApplication } from './helpers/application.js';
+import {
+  testApplication,
+  createTestApplication,
+} from './helpers/application.js';
 import { createTestUser } from './helpers/user.js';
 
 beforeEach(cleanDatabase);
@@ -97,7 +100,9 @@ describe('POST /api/applications', () => {
   });
 
   it('should return 401 when user is not authenticated', async () => {
-    const response = await request(app).post('/api/applications').send(testApplication);
+    const response = await request(app)
+      .post('/api/applications')
+      .send(testApplication);
 
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
@@ -138,5 +143,90 @@ describe('POST /api/applications', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);
+  });
+});
+
+describe('GET /api/applications', () => {
+  it('should get applications successfully', async () => {
+    const user = await createTestUser();
+
+    await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Applications retrieved successfully');
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0]).toMatchObject({
+      company: testApplication.company,
+      position: testApplication.position,
+      status: testApplication.status,
+    });
+  });
+
+  it('should only return applications owned by authenticated user', async () => {
+    const user = await createTestUser();
+
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: 'other@example.com',
+        password: 'password123',
+      },
+    });
+
+    await createTestApplication(user.id);
+
+    await prisma.application.create({
+      data: {
+        userId: otherUser.id,
+        company: 'Other Company',
+        position: 'Backend Developer',
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+    expect(response.body.data[0].userId).toBe(user.id);
+    expect(response.body.data[0].company).toBe(testApplication.company);
+  });
+
+  it('should return empty array when user has no applications', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toEqual([]);
+  });
+
+  it('should return 401 when user is not authenticated', async () => {
+    const response = await request(app).get('/api/applications');
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
   });
 });
