@@ -1,6 +1,9 @@
 import prisma from '../config/prisma.js';
 
-import type { CreateApplicationInput } from '../validations/application.validations.js';
+import type {
+  CreateApplicationInput,
+  GetApplicationsQuery,
+} from '../validations/application.validations.js';
 
 export const createApplication = async (
   userId: string,
@@ -48,13 +51,41 @@ export const createApplication = async (
   });
 };
 
-export const getApplications = async (userId: string) => {
-  return prisma.application.findMany({
-    where: {
-      userId,
-    },
-    orderBy: {
-      createdAt: 'desc',
-    },
-  });
+export const getApplications = async (
+  userId: string,
+  query: GetApplicationsQuery,
+) => {
+  const { page, limit } = query;
+
+  const skip = (page - 1) * limit;
+
+  const [applications, total] =
+    await Promise.all([
+      prisma.application.findMany({
+        where: {
+          userId,
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+        skip,
+        take: limit,
+      }),
+
+      prisma.application.count({
+        where: {
+          userId,
+        },
+      }),
+    ]);
+
+  return {
+    applications,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit),
+    }
+  };
 };
