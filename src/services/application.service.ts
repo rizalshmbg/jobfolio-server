@@ -47,3 +47,14 @@ export const createApplication = async (
     },
   });
 };
+
+export const getApplications = async (userId: string) => {
+  return prisma.application.findMany({
+    where: {
+      userId,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    },
+  });
+};
