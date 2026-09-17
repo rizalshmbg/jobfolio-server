@@ -18,6 +18,8 @@ const envSchema = z.object({
     DATABASE_URL: z.string().min(1),
 
     JWT_SECRET: z.string().min(64, 'JWT_SECRET must be at least 64 characters'),
+
+    CLIENT_URL: z.url(),
 });
 
 export const env = envSchema.parse(process.env);
