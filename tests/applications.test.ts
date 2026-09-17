@@ -289,4 +289,77 @@ describe('GET /api/applications', () => {
     expect(response.status).toBe(400);
     expect(response.body.success).toBe(false);
   });
+
+  it('should search applications by company or position', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Tokopedia',
+          position: 'Frontend Developer',
+        },
+        {
+          userId: user.id,
+          company: 'Gojek',
+          position: 'Backend Developer',
+        },
+        {
+          userId: user.id,
+          company: 'Traveloka',
+          position: 'UI Designer',
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?search=developer')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 2,
+      totalPages: 1,
+    });
+  });
+
+  it('should not return other user applications when searching', async () => {
+    const user = await createTestUser();
+
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: 'other@example.com',
+        password: 'password123',
+      },
+    });
+
+    await prisma.application.create({
+      data: {
+        userId: otherUser.id,
+        company: 'Secret Company',
+        position: 'Frontend Developer',
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?search=frontend')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toEqual([]);
+    expect(response.body.meta.total).toBe(0);
+  });
 });
