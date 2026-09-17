@@ -4,6 +4,8 @@ declare global {
       user?: {
         userId: string;
       };
+
+      validatedQuery?: unknown;
     }
   }
 }
