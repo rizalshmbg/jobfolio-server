@@ -4,6 +4,7 @@ import type {
   CreateApplicationInput,
   GetApplicationsQuery,
 } from '../validations/application.validations.js';
+import type { Prisma } from '../generated/prisma/client.js';
 
 export const createApplication = async (
   userId: string,
@@ -55,29 +56,44 @@ export const getApplications = async (
   userId: string,
   query: GetApplicationsQuery,
 ) => {
-  const { page, limit } = query;
+  const { page, limit, search } = query;
 
   const skip = (page - 1) * limit;
 
-  const [applications, total] =
-    await Promise.all([
-      prisma.application.findMany({
-        where: {
-          userId,
+  const where: Prisma.ApplicationWhereInput = {
+    userId,
+    ...(search && {
+      OR: [
+        {
+          company: {
+            contains: search,
+            mode: 'insensitive',
+          },
         },
-        orderBy: {
-          createdAt: 'desc',
+        {
+          position: {
+            contains: search,
+            mode: 'insensitive',
+          },
         },
-        skip,
-        take: limit,
-      }),
+      ],
+    }),
+  };
 
-      prisma.application.count({
-        where: {
-          userId,
-        },
-      }),
-    ]);
+  const [applications, total] = await Promise.all([
+    prisma.application.findMany({
+      where,
+      orderBy: {
+        createdAt: 'desc',
+      },
+      skip,
+      take: limit,
+    }),
+
+    prisma.application.count({
+      where,
+    }),
+  ]);
 
   return {
     applications,
@@ -86,6 +102,6 @@ export const getApplications = async (
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-    }
+    },
   };
 };
