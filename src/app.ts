@@ -4,6 +4,7 @@ import { pinoHttp } from 'pino-http';
 import cookieParser from 'cookie-parser';
 
 import logger from './config/logger.js';
+import { corsOptions } from './config/cors.js';
 import { notFoundMiddleware } from './middlewares/not-found.middleware.js';
 import { errorMiddleware } from './middlewares/error.middleware.js';
 import authRouter from './routes/auth.route.js';
@@ -11,7 +12,7 @@ import authRouter from './routes/auth.route.js';
 const app: Express = express();
 
 app.use(pinoHttp({ logger }));
-app.use(cors());
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(cookieParser());
 
