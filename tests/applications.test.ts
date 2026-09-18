@@ -414,7 +414,11 @@ describe('GET /api/applications', () => {
     });
   });
 
-  it('should return 400 when status is invalid', async () => {
+  it.each([
+    ['status', 'INVALID_STATUS'],
+    ['employmentType', 'INVALID_TYPE'],
+    ['workArrangement', 'INVALID_TYPE'],
+  ])('should return 400 when %s is invalid', async (query, value) => {
     const user = await createTestUser();
 
     const accessToken = generateAccessToken({
@@ -422,7 +426,7 @@ describe('GET /api/applications', () => {
     });
 
     const response = await request(app)
-      .get('/api/applications?status=INVALID_STATUS')
+      .get(`/api/applications?${query}=${value}`)
       .set('Authorization', `Bearer ${accessToken}`);
 
     expect(response.status).toBe(400);
@@ -473,5 +477,293 @@ describe('GET /api/applications', () => {
     });
 
     expect(response.body.meta.total).toBe(1);
+  });
+
+  it('should sort applications by createdAt descending by default', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: 'Old Company',
+        position: 'Frontend Developer',
+        createdAt: new Date('2026-01-01'),
+      },
+    });
+
+    await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: 'New Company',
+        position: 'Backend Developer',
+        createdAt: new Date('2026-09-01'),
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+
+    expect(response.body.data[0].company).toBe('New Company');
+
+    expect(response.body.data[1].company).toBe('Old Company');
+  });
+
+  it('should sort applications by selected field and order', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Tokopedia',
+          position: 'Frontend Developer',
+        },
+        {
+          userId: user.id,
+          company: 'Gojek',
+          position: 'Backend Developer',
+        },
+        {
+          userId: user.id,
+          company: 'Traveloka',
+          position: 'UI Designer',
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?sortBy=company&order=asc')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+
+    expect(
+      response.body.data.map(
+        (application: { company: string }) => application.company,
+      ),
+    ).toEqual(['Gojek', 'Tokopedia', 'Traveloka']);
+  });
+
+  it('should return 400 when sort field is invalid', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?sortBy=invalid')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+  });
+
+  it('should filter applications by employment type', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Tokopedia',
+          position: 'Frontend Developer',
+          employmentType: 'FULL_TIME',
+        },
+        {
+          userId: user.id,
+          company: 'Gojek',
+          position: 'Backend Developer',
+          employmentType: 'CONTRACT',
+        },
+        {
+          userId: user.id,
+          company: 'Traveloka',
+          position: 'UI Designer',
+          employmentType: 'FULL_TIME',
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?employmentType=FULL_TIME')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+
+    expect(
+      response.body.data.every(
+        (application: { employmentType: string }) =>
+          application.employmentType === 'FULL_TIME',
+      ),
+    ).toBe(true);
+
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 2,
+      totalPages: 1,
+    });
+  });
+
+  it('should filter applications by work arrangement', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Tokopedia',
+          position: 'Frontend Developer',
+          workArrangement: 'REMOTE',
+        },
+        {
+          userId: user.id,
+          company: 'Gojek',
+          position: 'Backend Developer',
+          workArrangement: 'HYBRID',
+        },
+        {
+          userId: user.id,
+          company: 'Traveloka',
+          position: 'UI Designer',
+          workArrangement: 'REMOTE',
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?workArrangement=REMOTE')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+
+    expect(
+      response.body.data.every(
+        (application: { workArrangement: string }) =>
+          application.workArrangement === 'REMOTE',
+      ),
+    ).toBe(true);
+
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 2,
+      totalPages: 1,
+    });
+  });
+
+  it('should sort applications by minimum salary descending', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Company A',
+          position: 'Frontend Developer',
+          salaryMin: 8_000_000,
+          salaryMax: 12_000_000,
+        },
+        {
+          userId: user.id,
+          company: 'Company B',
+          position: 'Frontend Developer',
+          salaryMin: 15_000_000,
+          salaryMax: 20_000_000,
+        },
+        {
+          userId: user.id,
+          company: 'Company C',
+          position: 'Frontend Developer',
+          salaryMin: 10_000_000,
+          salaryMax: 15_000_000,
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?sortBy=salaryMin&order=desc')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+
+    expect(
+      response.body.data.map(
+        (application: { salaryMin: number }) => application.salaryMin,
+      ),
+    ).toEqual([15_000_000, 10_000_000, 8_000_000]);
+  });
+
+  it('should sort applications by maximum salary ascending', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Company A',
+          position: 'Frontend Developer',
+          salaryMin: 8_000_000,
+          salaryMax: 12_000_000,
+        },
+        {
+          userId: user.id,
+          company: 'Company B',
+          position: 'Frontend Developer',
+          salaryMin: 15_000_000,
+          salaryMax: 20_000_000,
+        },
+        {
+          userId: user.id,
+          company: 'Company C',
+          position: 'Frontend Developer',
+          salaryMin: 10_000_000,
+          salaryMax: 15_000_000,
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?sortBy=salaryMax&order=asc')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+
+    expect(
+      response.body.data.map(
+        (application: { salaryMax: number }) => application.salaryMax,
+      ),
+    ).toEqual([12_000_000, 15_000_000, 20_000_000]);
   });
 });
