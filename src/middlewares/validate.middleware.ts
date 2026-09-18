@@ -30,3 +30,16 @@ export const validateQuery =
 
     next();
   };
+
+export const validateParams = (schema: ZodType): RequestHandler => (req, _res, next) => {
+  const result = schema.safeParse(req.params);
+
+  if (!result.success) {
+    next(result.error);
+    return;
+  }
+
+  req.validatedParams = result.data;
+
+  next();
+}
