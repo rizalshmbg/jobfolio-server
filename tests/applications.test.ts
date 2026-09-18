@@ -864,3 +864,195 @@ describe('GET /api/applications/:id', () => {
     expect(response.body.message).toBe('Unauthorized');
   });
 });
+
+describe('PATCH /api/application/:id', () => {
+  it('should update application successfully', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        status: 'INTERVIEW',
+        notes: 'Interview next Monday',
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Application updated successfully');
+    expect(response.body.data).toMatchObject({
+      id: application.id,
+      company: application.company,
+      position: application.position,
+      status: 'INTERVIEW',
+      notes: 'Interview next Monday',
+    });
+  });
+
+  it('should persist updated application to database', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        company: 'Updated Company',
+        position: 'Frontend Engineer',
+      });
+
+    const updatedApplication = await prisma.application.findUnique({
+      where: {
+        id: application.id,
+      },
+    });
+
+    expect(updatedApplication).toMatchObject({
+      company: 'Updated Company',
+      position: 'Frontend Engineer',
+    });
+  });
+
+  it('should clear nullable fields when value is null', async () => {
+    const user = await createTestUser();
+
+    const application = await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: 'Tokopedia',
+        position: 'Frontend Developer',
+        notes: 'Interview preparation',
+        location: 'Jakarta',
+        salaryMin: 8_000_000,
+        salaryMax: 12_000_000,
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        notes: null,
+        location: null,
+        salaryMin: null,
+        salaryMax: null,
+      });
+    
+    expect(response.status).toBe(200);
+    expect(response.body.data).toMatchObject({
+      notes: null,
+      location: null,
+      salaryMin: null,
+      salaryMax: null,
+    });
+  });
+
+  it('should return 400 when updated minimum salary is greater than existing maximum salary', async () => {
+    const user = await createTestUser();
+
+    const application = await prisma.application.create({
+      data: {
+        userId: user.id,
+        company: 'Tokopedia',
+        position: 'Frontend Developer',
+        salaryMin: 8_000_000,
+        salaryMax: 12_000_000,
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        salaryMin: 15_000_000,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe(
+      'Minimum salary cannot be greater than maximum salary',
+    );
+  });
+
+  it('should return 404 when application belongs to another user', async () => {
+    const user = await createTestUser();
+
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: 'other@example.com',
+        password: 'password123',
+      },
+    });
+
+    const otherApplication = await createTestApplication(otherUser.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .patch(`/api/applications/${otherApplication.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        status: 'INTERVIEW',
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Application not found');
+  });
+
+  it('should return 400 when update data is invalid', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        status: 'INVALID_STATUS',
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+  });
+
+  it('should return 401 when user is not authenticated', async () => {
+    const applicationId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app)
+      .patch(`/api/applications/${applicationId}`)
+      .send({
+        status: 'INTERVIEW',
+      });
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+});
