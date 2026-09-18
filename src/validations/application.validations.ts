@@ -21,19 +21,23 @@ export const employmentTypeSchema = z.enum([
 
 export const workArrangementSchema = z.enum(['ONSITE', 'HYBRID', 'REMOTE']);
 
-export const createApplicationSchema = z
-  .object({
-    company: z.string().trim().min(1).max(100),
-    position: z.string().trim().min(1).max(100),
+export const applicationBaseSchema = z.object({
+  company: z.string().trim().min(1).max(100),
+  position: z.string().trim().min(1).max(100),
+  status: applicationStatusSchema,
+  appliedAt: z.coerce.date().optional(),
+  jobUrl: z.url().optional(),
+  location: z.string().trim().max(100).optional(),
+  employmentType: employmentTypeSchema.optional(),
+  workArrangement: workArrangementSchema.optional(),
+  salaryMin: z.number().int().nonnegative().optional(),
+  salaryMax: z.number().int().nonnegative().optional(),
+  notes: z.string().trim().max(2000).optional(),
+});
+
+export const createApplicationSchema = applicationBaseSchema
+  .extend({
     status: applicationStatusSchema.default('APPLIED'),
-    appliedAt: z.coerce.date().optional(),
-    jobUrl: z.url().optional(),
-    location: z.string().trim().max(100).optional(),
-    employmentType: employmentTypeSchema.optional(),
-    workArrangement: workArrangementSchema.optional(),
-    salaryMin: z.number().int().nonnegative().optional(),
-    salaryMax: z.number().int().nonnegative().optional(),
-    notes: z.string().trim().max(2000).optional(),
   })
   .refine(
     (data) =>
@@ -47,6 +51,20 @@ export const createApplicationSchema = z
   );
 
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
+
+export const updateApplicationSchema = applicationBaseSchema.partial().extend({
+  appliedAt: z.coerce.date().nullable().optional(),
+  jobUrl: z.url().nullable().optional(),
+  location: z.string().trim().max(100).nullable().optional(),
+  employmentType: employmentTypeSchema.nullable().optional(),
+  workArrangement: workArrangementSchema.nullable().optional(),
+  salaryMin: z.number().int().nonnegative().nullable().optional(),
+  salaryMax: z.number().int().nonnegative().nullable().optional(),
+  notes: z.string().trim().max(2000).nullable().optional(),
+});
+
+export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
+
 
 export const getApplicationsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
