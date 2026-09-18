@@ -952,7 +952,7 @@ describe('PATCH /api/application/:id', () => {
         salaryMin: null,
         salaryMax: null,
       });
-    
+
     expect(response.status).toBe(200);
     expect(response.body.data).toMatchObject({
       notes: null,
@@ -1054,5 +1054,108 @@ describe('PATCH /api/application/:id', () => {
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe('Unauthorized');
+  });
+});
+
+describe('DELTE /api/application/:id', () => {
+  it('should delete application successfully', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .delete(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Application deleted successfully');
+  });
+
+  it('should remove application from database', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    await request(app)
+      .delete(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    const deletedApplication = await prisma.application.findUnique({
+      where: {
+        id: application.id,
+      },
+    });
+
+    expect(deletedApplication).toBeNull();
+  });
+
+  it('should return 404 when application belongs to another user', async () => {
+    const user = await createTestUser();
+
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: 'other@example.com',
+        password: 'password123',
+      },
+    });
+
+    const otherApplication = await createTestApplication(otherUser.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .delete(`/api/applications/${otherApplication.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Application not found');
+
+    const application = await prisma.application.findUnique({
+      where: {
+        id: otherApplication.id,
+      },
+    });
+
+    expect(application).not.toBeNull();
+  });
+
+  it('should return 401 when user is not authenticated', async () => {
+    const applicationId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app).delete(
+      `/api/applications/${applicationId}`,
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+
+  it('should return 400 when application id is invalid', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .delete('/api/applications/invalid-id')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
   });
 });
