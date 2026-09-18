@@ -1,15 +1,17 @@
 import type { RequestHandler } from 'express';
+import {
+  type ApplicationIdParams,
+  type CreateApplicationInput,
+  type GetApplicationsQuery,
+  type UpdateApplicationInput,
+} from '../validations/application.validations.js';
 
 import {
   createApplication,
   getApplicationById,
   getApplications,
+  updateApplication,
 } from '../services/application.service.js';
-import {
-  type ApplicationIdParams,
-  type CreateApplicationInput,
-  type GetApplicationsQuery,
-} from '../validations/application.validations.js';
 
 export const createApplicationController: RequestHandler = async (req, res) => {
   const application = await createApplication(
@@ -37,7 +39,11 @@ export const getApplicationsController: RequestHandler = async (req, res) => {
   });
 };
 
-export const getApplicationByIdController: RequestHandler = async (req, res, next) => {
+export const getApplicationByIdController: RequestHandler = async (
+  req,
+  res,
+  next,
+) => {
   try {
     // get validatedParams
     const params = req.validatedParams as ApplicationIdParams;
@@ -53,7 +59,36 @@ export const getApplicationByIdController: RequestHandler = async (req, res, nex
       success: true,
       message: 'Application retrieved successfully',
       data: result,
-    })
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateApplicationController: RequestHandler = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    // validated params
+    const params = req.validatedParams as ApplicationIdParams;
+
+    // authenticated userId
+    const userId = req.user!.userId;
+
+    // validated body
+    const data = req.body as UpdateApplicationInput;
+
+    // updateApplication
+    const result = await updateApplication(userId, params.id, data);
+
+    // return response
+    res.status(200).json({
+      success: true,
+      message: 'Application updated successfully',
+      data: result,
+    });
   } catch (error) {
     next(error);
   }
