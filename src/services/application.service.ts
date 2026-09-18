@@ -225,3 +225,16 @@ export const updateApplication = async (
 
   return updatedApplication;
 };
+
+export const deleteApplication = async (
+  userId: string,
+  applicationId: string,
+) => {
+  const application = await getApplicationById(userId, applicationId);
+
+  await prisma.application.delete({
+    where: {
+      id: application.id,
+    }
+  });
+};
