@@ -56,7 +56,7 @@ export const getApplications = async (
   userId: string,
   query: GetApplicationsQuery,
 ) => {
-  const { page, limit, search, status } = query;
+  const { page, limit, search, status, employmentType, workArrangement, sortBy, order } = query;
 
   const skip = (page - 1) * limit;
 
@@ -65,6 +65,15 @@ export const getApplications = async (
     ...(status && {
       status,
     }),
+
+    ...(employmentType && {
+      employmentType,
+    }),
+
+    ...(workArrangement && {
+      workArrangement,
+    }),
+
     ...(search && {
       OR: [
         {
@@ -87,7 +96,7 @@ export const getApplications = async (
     prisma.application.findMany({
       where,
       orderBy: {
-        createdAt: 'desc',
+        [sortBy]: order,
       },
       skip,
       take: limit,
