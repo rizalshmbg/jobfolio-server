@@ -6,6 +6,7 @@ declare global {
       };
 
       validatedQuery?: unknown;
+      validatedParams?: unknown;
     }
   }
 }
