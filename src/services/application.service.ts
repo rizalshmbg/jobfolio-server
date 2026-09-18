@@ -56,12 +56,15 @@ export const getApplications = async (
   userId: string,
   query: GetApplicationsQuery,
 ) => {
-  const { page, limit, search } = query;
+  const { page, limit, search, status } = query;
 
   const skip = (page - 1) * limit;
 
   const where: Prisma.ApplicationWhereInput = {
     userId,
+    ...(status && {
+      status,
+    }),
     ...(search && {
       OR: [
         {
