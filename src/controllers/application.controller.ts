@@ -8,6 +8,7 @@ import {
 
 import {
   createApplication,
+  deleteApplication,
   getApplicationById,
   getApplications,
   updateApplication,
@@ -88,6 +89,27 @@ export const updateApplicationController: RequestHandler = async (
       success: true,
       message: 'Application updated successfully',
       data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteApplicationController: RequestHandler = async (
+  req,
+  res,
+  next,
+) => {
+  try {
+    const params = req.validatedParams as ApplicationIdParams;
+
+    const userId = req.user!.userId;
+
+    await deleteApplication(userId, params.id);
+
+    res.status(200).json({
+      success: true,
+      message: 'Application deleted successfully',
     });
   } catch (error) {
     next(error);
