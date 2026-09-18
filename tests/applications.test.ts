@@ -767,3 +767,100 @@ describe('GET /api/applications', () => {
     ).toEqual([12_000_000, 15_000_000, 20_000_000]);
   });
 });
+
+describe('GET /api/applications/:id', () => {
+  it('should get application by id successfully', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe('Application retrieved successfully');
+    expect(response.body.data).toMatchObject({
+      id: application.id,
+      userId: user.id,
+      company: testApplication.company,
+      position: testApplication.position,
+    });
+  });
+
+  it('should return 404 when application does not exist', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const nonExistingId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app)
+      .get(`/api/applications/${nonExistingId}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Application not found');
+  });
+
+  it('should return 404 when application belongs to another user', async () => {
+    const user = await createTestUser();
+
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: 'other@example.com',
+        password: 'password123',
+      },
+    });
+
+    const otherApplication = await createTestApplication(otherUser.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get(`/api/applications/${otherApplication.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Application not found');
+  });
+
+  it('should return 400 when application id is invalid', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications/invalid-id')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+  });
+
+  it('should return 401 when user is not authenticated', async () => {
+    const applicationId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app).get(
+      `/api/applications/${applicationId}`,
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+});
