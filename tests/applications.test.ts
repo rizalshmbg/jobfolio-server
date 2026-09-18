@@ -362,4 +362,116 @@ describe('GET /api/applications', () => {
     expect(response.body.data).toEqual([]);
     expect(response.body.meta.total).toBe(0);
   });
+
+  it('should filter applications by status', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Tokopedia',
+          position: 'Frontend Developer',
+          status: 'INTERVIEW',
+        },
+        {
+          userId: user.id,
+          company: 'Gojek',
+          position: 'Backend Developer',
+          status: 'APPLIED',
+        },
+        {
+          userId: user.id,
+          company: 'Traveloka',
+          position: 'Frontend Developer',
+          status: 'INTERVIEW',
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?status=INTERVIEW')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(2);
+
+    expect(
+      response.body.data.every(
+        (application: { status: string }) => application.status === 'INTERVIEW',
+      ),
+    ).toBe(true);
+
+    expect(response.body.meta).toEqual({
+      page: 1,
+      limit: 10,
+      total: 2,
+      totalPages: 1,
+    });
+  });
+
+  it('should return 400 when status is invalid', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?status=INVALID_STATUS')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+  });
+
+  it('should combine search and status filter', async () => {
+    const user = await createTestUser();
+
+    await prisma.application.createMany({
+      data: [
+        {
+          userId: user.id,
+          company: 'Tokopedia',
+          position: 'Frontend Developer',
+          status: 'INTERVIEW',
+        },
+        {
+          userId: user.id,
+          company: 'Gojek',
+          position: 'Frontend Developer',
+          status: 'APPLIED',
+        },
+        {
+          userId: user.id,
+          company: 'Traveloka',
+          position: 'Backend Developer',
+          status: 'INTERVIEW',
+        },
+      ],
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications?search=frontend&status=INTERVIEW')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.data).toHaveLength(1);
+
+    expect(response.body.data[0]).toMatchObject({
+      company: 'Tokopedia',
+      position: 'Frontend Developer',
+      status: 'INTERVIEW',
+    });
+
+    expect(response.body.meta.total).toBe(1);
+  });
 });
