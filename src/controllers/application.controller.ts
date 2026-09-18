@@ -2,9 +2,11 @@ import type { RequestHandler } from 'express';
 
 import {
   createApplication,
+  getApplicationById,
   getApplications,
 } from '../services/application.service.js';
 import {
+  type ApplicationIdParams,
   type CreateApplicationInput,
   type GetApplicationsQuery,
 } from '../validations/application.validations.js';
@@ -33,4 +35,26 @@ export const getApplicationsController: RequestHandler = async (req, res) => {
     data: result.applications,
     meta: result.pagination,
   });
+};
+
+export const getApplicationByIdController: RequestHandler = async (req, res, next) => {
+  try {
+    // get validatedParams
+    const params = req.validatedParams as ApplicationIdParams;
+
+    // get userId
+    const userId = req.user!.userId;
+
+    // fetch getApplicationById()
+    const result = await getApplicationById(userId, params.id);
+
+    // return response
+    res.status(200).json({
+      success: true,
+      message: 'Application retrieved successfully',
+      data: result,
+    })
+  } catch (error) {
+    next(error);
+  }
 };
