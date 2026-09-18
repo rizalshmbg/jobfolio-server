@@ -2,6 +2,7 @@ import { Router } from 'express';
 
 import {
   createApplicationController,
+  deleteApplicationController,
   getApplicationByIdController,
   getApplicationsController,
   updateApplicationController,
@@ -27,24 +28,34 @@ router.post(
   validate(createApplicationSchema),
   createApplicationController,
 );
+
 router.get(
   '/',
   authMiddleware,
   validateQuery(getApplicationsQuerySchema),
   getApplicationsController,
 );
+
 router.get(
   '/:id',
   authMiddleware,
   validateParams(applicationIdParamsSchema),
   getApplicationByIdController,
 );
+
 router.patch(
   '/:id',
   authMiddleware,
   validateParams(applicationIdParamsSchema),
   validate(updateApplicationSchema),
   updateApplicationController,
+);
+
+router.delete(
+  '/:id',
+  authMiddleware,
+  validateParams(applicationIdParamsSchema),
+  deleteApplicationController,
 );
 
 export default router;
