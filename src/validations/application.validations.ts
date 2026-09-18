@@ -70,3 +70,10 @@ export const getApplicationsQuerySchema = z.object({
 });
 
 export type GetApplicationsQuery = z.infer<typeof getApplicationsQuerySchema>;
+
+
+export const applicationIdParamsSchema = z.object({
+  id: z.uuid(),
+});
+
+export type ApplicationIdParams = z.infer<typeof applicationIdParamsSchema>;
