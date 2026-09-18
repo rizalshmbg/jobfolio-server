@@ -53,6 +53,20 @@ export const getApplicationsQuerySchema = z.object({
   limit: z.coerce.number().int().positive().max(100).default(10),
   search: z.string().trim().min(1).optional(),
   status: applicationStatusSchema.optional(),
+  employmentType: employmentTypeSchema.optional(),
+  workArrangement: workArrangementSchema.optional(),
+  sortBy: z
+    .enum([
+      'createdAt',
+      'updatedAt',
+      'appliedAt',
+      'company',
+      'position',
+      'salaryMin',
+      'salaryMax',
+    ])
+    .default('createdAt'),
+  order: z.enum(['asc', 'desc']).default('desc'),
 });
 
 export type GetApplicationsQuery = z.infer<typeof getApplicationsQuerySchema>;
