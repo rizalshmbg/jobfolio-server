@@ -190,7 +190,7 @@ describe("POST /api/auth/login", () => {
   });
 });
 
-describe("POST /api/auth/refresh-access-token", () => {
+describe("POST /api/auth/refresh", () => {
   it("should refresh access token successfully", async () => {
     await createTestUser();
 
@@ -207,7 +207,7 @@ describe("POST /api/auth/refresh-access-token", () => {
     expect(loginResponse.status).toBe(200);
 
     // refresh access token
-    const response = await agent.post('/api/auth/refresh-access-token');
+    const response = await agent.post('/api/auth/refresh');
 
     expect(response.status).toBe(200);
     expect(response.body.success).toBe(true);
@@ -230,7 +230,7 @@ describe("POST /api/auth/refresh-access-token", () => {
   });
 
   it("should return 401 when refresh access token is missing", async () => {
-    const response = await request(app).post('/api/auth/refresh-access-token');
+    const response = await request(app).post('/api/auth/refresh');
 
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
@@ -239,7 +239,7 @@ describe("POST /api/auth/refresh-access-token", () => {
 
   it("should return 401 when refresh access token is invalid", async () => {
     const response = await request(app)
-      .post('/api/auth/refresh-access-token')
+      .post('/api/auth/refresh')
       .set('Cookie', 'refreshToken=invalid-token');
 
     expect(response.status).toBe(401);
@@ -270,7 +270,7 @@ describe("POST /api/auth/refresh-access-token", () => {
 
     // refresh access token with old refresh cookie
     const refreshResponse = await request(app)
-      .post('/api/auth/refresh-access-token')
+      .post('/api/auth/refresh')
       .set('Cookie', oldRefreshCookie);
 
     // expect refresh response
@@ -278,7 +278,7 @@ describe("POST /api/auth/refresh-access-token", () => {
 
     // reuse old refresh token
     const reuseResponse = await request(app)
-      .post('/api/auth/refresh-access-token')
+      .post('/api/auth/refresh')
       .set('Cookie', oldRefreshCookie);
 
     expect(reuseResponse.status).toBe(401);
@@ -326,7 +326,7 @@ describe('POST /api/auth/logout', () => {
     expect(logoutCookie).toContain('refreshToken=');
 
     // refresh token after logout
-    const refreshResponse = await agent.post('/api/auth/refresh-access-token');
+    const refreshResponse = await agent.post('/api/auth/refresh');
 
     expect(refreshResponse.status).toBe(401);
     expect(refreshResponse.body.success).toBe(false);
