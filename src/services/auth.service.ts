@@ -95,28 +95,6 @@ export const login = async (data: LoginInput) => {
     refreshToken,
   };
 }
-
-export const getMe = async (userId: string) => {
-  const user = await prisma.user.findUnique({
-    where: {
-      id: userId,
-    },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      createdAt: true,
-      updatedAt: true,
-    },
-  });
-
-  if (!user) {
-    throw new AppError(401, 'Unauthorized');
-  }
-
-  return user;
-}
-
 export const refreshAccessToken = async (refreshToken: string) => {
   // hashing refresh token
   const tokenHash = hashRefreshToken(refreshToken);

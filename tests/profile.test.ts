@@ -4,11 +4,52 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import app from '../src/app.js';
 import prisma from '../src/config/prisma.js';
 import { generateAccessToken } from '../src/utils/jwt.js';
+import { testUser, createTestUser } from './helpers/user.js';
 import { cleanDatabase, disconnectDatabase } from './helpers/database.js';
-import { createTestUser } from './helpers/user.js';
 
 beforeEach(cleanDatabase);
 afterAll(disconnectDatabase);
+
+describe("GET /api/profile", () => {
+  it("should return current user when access token is valid", async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/profile')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.data).toMatchObject({
+      id: user.id,
+      name: testUser.name,
+      email: testUser.email,
+    });
+    expect(response.body.data).not.toHaveProperty('password');
+  });
+
+  it("should return 401 when access token is missing", async () => {
+    const response = await request(app).get('/api/profile');
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+
+  it("should return 401 when access token is invalid", async () => {
+    const response = await request(app)
+      .get('/api/profile')
+      .set('Authorization', 'Bearer invalid-token');
+    
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+});
 
 describe('PATCH /api/profile', () => {
   it('should update user profile successfully', async () => {

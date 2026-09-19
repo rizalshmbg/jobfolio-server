@@ -3,7 +3,6 @@ import type { RequestHandler } from 'express';
 import {
   register,
   login,
-  getMe,
   refreshAccessToken,
   logout,
 } from '../services/auth.service.js';
@@ -33,16 +32,6 @@ export const loginController: RequestHandler = async (req, res) => {
     success: true,
     message: 'Login successful',
     data,
-  });
-};
-
-export const getMeController: RequestHandler = async (req, res) => {
-  const user = await getMe(req.user!.userId);
-
-  res.status(200).json({
-    success: true,
-    message: 'User retrieved successfully',
-    data: user,
   });
 };
 

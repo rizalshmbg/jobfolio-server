@@ -6,7 +6,6 @@ import app from '../src/app.js';
 import { cleanDatabase, disconnectDatabase } from './helpers/database.js';
 import prisma from '../src/config/prisma.js';
 import { testUser, createTestUser } from './helpers/user.js';
-import { generateAccessToken } from '../src/utils/jwt.js';
 import { hashRefreshToken } from '../src/utils/refresh-token.js';
 
 beforeEach(cleanDatabase);
@@ -188,47 +187,6 @@ describe("POST /api/auth/login", () => {
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe('Email or password is incorrect');
-  });
-});
-
-describe("GET /api/auth/me", () => {
-  it("should return current user when access token is valid", async () => {
-    const user = await createTestUser();
-
-    const accessToken = generateAccessToken({
-      userId: user.id,
-    });
-
-    const response = await request(app)
-      .get('/api/auth/me')
-      .set('Authorization', `Bearer ${accessToken}`);
-
-    expect(response.status).toBe(200);
-    expect(response.body.success).toBe(true);
-    expect(response.body.data).toMatchObject({
-      id: user.id,
-      name: testUser.name,
-      email: testUser.email,
-    });
-    expect(response.body.data).not.toHaveProperty('password');
-  });
-
-  it("should return 401 when access token is missing", async () => {
-    const response = await request(app).get('/api/auth/me');
-
-    expect(response.status).toBe(401);
-    expect(response.body.success).toBe(false);
-    expect(response.body.message).toBe('Unauthorized');
-  });
-
-  it("should return 401 when access token is invalid", async () => {
-    const response = await request(app)
-      .get('/api/auth/me')
-      .set('Authorization', 'Bearer invalid-token');
-    
-    expect(response.status).toBe(401);
-    expect(response.body.success).toBe(false);
-    expect(response.body.message).toBe('Unauthorized');
   });
 });
 
