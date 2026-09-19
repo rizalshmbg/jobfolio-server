@@ -11,6 +11,7 @@ import { errorMiddleware } from './middlewares/error.middleware.js';
 import authRouter from './routes/auth.route.js';
 import applicationRouter from './routes/application.route.js';
 import dashboardRouter from './routes/dashboard.route.js';
+import profileRouter from './routes/profile.route.js';
 
 const app: Express = express();
 
@@ -29,6 +30,7 @@ app.get('/api/health', (_req: Request, res: Response) => {
 app.use('/api/auth', authRouter);
 app.use('/api/applications', applicationRouter);
 app.use('/api/dashboard', dashboardRouter);
+app.use('/api/profile', profileRouter);
 
 app.use(notFoundMiddleware);
 app.use(errorMiddleware);
