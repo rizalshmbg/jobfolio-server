@@ -4,7 +4,7 @@ import {
   type CreateApplicationInput,
   type GetApplicationsQuery,
   type UpdateApplicationInput,
-} from '../validations/application.validations.js';
+} from '../validations/application.validation.js';
 
 import {
   createApplication,

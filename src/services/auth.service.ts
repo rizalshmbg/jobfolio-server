@@ -1,7 +1,7 @@
 import bcrypt from 'bcrypt';
 
 import prisma from '../config/prisma.js';
-import type { RegisterInput, LoginInput } from '../validations/auth.validations.js';
+import type { RegisterInput, LoginInput } from '../validations/auth.validation.js';
 import { AppError } from '../errors/app-error.js';
 import { generateAccessToken } from '../utils/jwt.js';
 import { generateRefreshToken, getRefreshTokenExpiry, hashRefreshToken } from '../utils/refresh-token.js';

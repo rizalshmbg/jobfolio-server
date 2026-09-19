@@ -9,7 +9,7 @@ import {
 import type {
   RegisterInput,
   LoginInput,
-} from '../validations/auth.validations.js';
+} from '../validations/auth.validation.js';
 import { AppError } from '../errors/app-error.js';
 import { clearRefreshTokenCookieOptions, refreshTokenCookieOptions } from '../config/cookie.js';
 

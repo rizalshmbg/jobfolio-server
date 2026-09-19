@@ -6,7 +6,7 @@ import {
 } from '../controllers/profile.controller.js';
 import { authMiddleware } from '../middlewares/auth.middleware.js';
 import { validate } from '../middlewares/validate.middleware.js';
-import { updateProfileSchema } from '../validations/profile.validations.js';
+import { updateProfileSchema } from '../validations/profile.validation.js';
 
 const router = Router();
 

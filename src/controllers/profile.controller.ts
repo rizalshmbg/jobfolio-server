@@ -1,7 +1,7 @@
 import type { RequestHandler } from 'express';
 
 import { getProfile, updateProfile } from '../services/profile.service.js';
-import type { UpdateProfileInput } from '../validations/profile.validations.js';
+import type { UpdateProfileInput } from '../validations/profile.validation.js';
 
 export const getProfileController: RequestHandler = async (req, res) => {
   const userId = req.user!.userId;

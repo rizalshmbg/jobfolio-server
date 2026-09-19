@@ -1,7 +1,7 @@
 import prisma from '../config/prisma.js';
 import { AppError } from '../errors/app-error.js';
 
-import type { UpdateProfileInput } from '../validations/profile.validations.js';
+import type { UpdateProfileInput } from '../validations/profile.validation.js';
 
 export const getProfile = async (userId: string) => {
   const user = await prisma.user.findUnique({

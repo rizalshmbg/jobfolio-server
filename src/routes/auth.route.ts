@@ -4,14 +4,13 @@ import { validate } from '../middlewares/validate.middleware.js';
 import {
   registerSchema,
   loginSchema,
-} from '../validations/auth.validations.js';
+} from '../validations/auth.validation.js';
 import {
   registerController,
   loginController,
   refreshAccessTokenController,
   logoutController,
 } from '../controllers/auth.controller.js';
-import { authMiddleware } from '../middlewares/auth.middleware.js';
 
 const router = Router();
 

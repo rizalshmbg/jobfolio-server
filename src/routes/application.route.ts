@@ -18,7 +18,7 @@ import {
   createApplicationSchema,
   getApplicationsQuerySchema,
   updateApplicationSchema,
-} from '../validations/application.validations.js';
+} from '../validations/application.validation.js';
 
 const router = Router();
 

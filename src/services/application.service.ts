@@ -4,7 +4,7 @@ import type {
   CreateApplicationInput,
   GetApplicationsQuery,
   UpdateApplicationInput,
-} from '../validations/application.validations.js';
+} from '../validations/application.validation.js';
 import type { Prisma } from '../generated/prisma/client.js';
 import { AppError } from '../errors/app-error.js';
 
