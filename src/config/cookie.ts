@@ -7,7 +7,7 @@ export const refreshTokenCookieBaseOptions: CookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
   sameSite: 'lax',
-  maxAge: REFRESH_TOKEN_TTL_MS,
+  path: '/api/auth',
 };
 
 export const refreshTokenCookieOptions: CookieOptions = {
