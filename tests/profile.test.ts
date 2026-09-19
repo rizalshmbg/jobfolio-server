@@ -10,8 +10,8 @@ import { cleanDatabase, disconnectDatabase } from './helpers/database.js';
 beforeEach(cleanDatabase);
 afterAll(disconnectDatabase);
 
-describe("GET /api/profile", () => {
-  it("should return current user when access token is valid", async () => {
+describe('GET /api/profile', () => {
+  it('should return authenticated user profile', async () => {
     const user = await createTestUser();
 
     const accessToken = generateAccessToken({
@@ -29,10 +29,10 @@ describe("GET /api/profile", () => {
       name: testUser.name,
       email: testUser.email,
     });
-    expect(response.body.data).not.toHaveProperty('password');
+    expect(response.body.data.password).toBeUndefined();
   });
 
-  it("should return 401 when access token is missing", async () => {
+  it('should return 401 when access token is missing', async () => {
     const response = await request(app).get('/api/profile');
 
     expect(response.status).toBe(401);
@@ -40,11 +40,11 @@ describe("GET /api/profile", () => {
     expect(response.body.message).toBe('Unauthorized');
   });
 
-  it("should return 401 when access token is invalid", async () => {
+  it('should return 401 when access token is invalid', async () => {
     const response = await request(app)
       .get('/api/profile')
       .set('Authorization', 'Bearer invalid-token');
-    
+
     expect(response.status).toBe(401);
     expect(response.body.success).toBe(false);
     expect(response.body.message).toBe('Unauthorized');
