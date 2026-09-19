@@ -12,6 +12,16 @@ export const generateAccessToken = (payload: AccessTokenPayload) => {
   });
 };
 
-export const verifyAccessToken = (token: string) => {
-  return jwt.verify(token, env.JWT_SECRET) as AccessTokenPayload;
-}
+export const verifyAccessToken = (token: string): AccessTokenPayload => {
+  const payload = jwt.verify(token, env.JWT_SECRET, {
+    algorithms: ['HS256'],
+  });
+
+  if (typeof payload === 'string' || typeof payload.userId !== 'string') {
+    throw new TypeError('Invalid access token payload');
+  }
+
+  return {
+    userId: payload.userId,
+  };
+};
