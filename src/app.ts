@@ -15,6 +15,9 @@ import profileRouter from './routes/profile.route.js';
 
 const app: Express = express();
 
+// Disable ads framework
+app.disable('x-powered-by');
+
 app.use(pinoHttp({ logger }));
 app.use(cors(corsOptions));
 app.use(express.json());
