@@ -15,10 +15,10 @@ import {
 } from '../services/application.service.js';
 
 export const createApplicationController: RequestHandler = async (req, res) => {
-  const application = await createApplication(
-    req.user!.userId,
-    req.body as CreateApplicationInput,
-  );
+  const userId = req.user!.userId;
+  const data = req.body as CreateApplicationInput;
+
+  const application = await createApplication(userId, data);
 
   res.status(201).json({
     success: true,
@@ -43,75 +43,54 @@ export const getApplicationsController: RequestHandler = async (req, res) => {
 export const getApplicationByIdController: RequestHandler = async (
   req,
   res,
-  next,
 ) => {
-  try {
-    // get validatedParams
-    const params = req.validatedParams as ApplicationIdParams;
+  // get validatedParams
+  const params = req.validatedParams as ApplicationIdParams;
 
-    // get userId
-    const userId = req.user!.userId;
+  // get userId
+  const userId = req.user!.userId;
 
-    // fetch getApplicationById()
-    const result = await getApplicationById(userId, params.id);
+  // fetch getApplicationById()
+  const result = await getApplicationById(userId, params.id);
 
-    // return response
-    res.status(200).json({
-      success: true,
-      message: 'Application retrieved successfully',
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
+  // return response
+  res.status(200).json({
+    success: true,
+    message: 'Application retrieved successfully',
+    data: result,
+  });
 };
 
-export const updateApplicationController: RequestHandler = async (
-  req,
-  res,
-  next,
-) => {
-  try {
-    // validated params
-    const params = req.validatedParams as ApplicationIdParams;
+export const updateApplicationController: RequestHandler = async (req, res) => {
+  // validated params
+  const params = req.validatedParams as ApplicationIdParams;
 
-    // authenticated userId
-    const userId = req.user!.userId;
+  // authenticated userId
+  const userId = req.user!.userId;
 
-    // validated body
-    const data = req.body as UpdateApplicationInput;
+  // validated body
+  const data = req.body as UpdateApplicationInput;
 
-    // updateApplication
-    const result = await updateApplication(userId, params.id, data);
+  // updateApplication
+  const result = await updateApplication(userId, params.id, data);
 
-    // return response
-    res.status(200).json({
-      success: true,
-      message: 'Application updated successfully',
-      data: result,
-    });
-  } catch (error) {
-    next(error);
-  }
+  // return response
+  res.status(200).json({
+    success: true,
+    message: 'Application updated successfully',
+    data: result,
+  });
 };
 
-export const deleteApplicationController: RequestHandler = async (
-  req,
-  res,
-  next,
-) => {
-  try {
-    const params = req.validatedParams as ApplicationIdParams;
+export const deleteApplicationController: RequestHandler = async (req, res) => {
+  const params = req.validatedParams as ApplicationIdParams;
 
-    const userId = req.user!.userId;
+  const userId = req.user!.userId;
 
-    await deleteApplication(userId, params.id);
+  await deleteApplication(userId, params.id);
 
-    res.status(200).json({
-      success: true,
-      message: 'Application deleted successfully',
-    });
-  } catch (error) {
-    next(error);
-  }
+  res.status(200).json({
+    success: true,
+    message: 'Application deleted successfully',
+  });
 };
