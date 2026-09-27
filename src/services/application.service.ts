@@ -179,59 +179,85 @@ export const updateApplication = async (
     );
   }
 
-  // update application with Prisma
-  const updatedApplication = await prisma.application.update({
+  const updateData: Prisma.ApplicationUpdateInput = {
+    ...(data.company !== undefined && {
+      company: data.company,
+    }),
+
+    ...(data.position !== undefined && {
+      position: data.position,
+    }),
+
+    ...(data.status !== undefined && {
+      status: data.status,
+    }),
+
+    ...(data.appliedAt !== undefined && {
+      appliedAt: data.appliedAt,
+    }),
+
+    ...(data.jobUrl !== undefined && {
+      jobUrl: data.jobUrl,
+    }),
+
+    ...(data.location !== undefined && {
+      location: data.location,
+    }),
+
+    ...(data.employmentType !== undefined && {
+      employmentType: data.employmentType,
+    }),
+
+    ...(data.workArrangement !== undefined && {
+      workArrangement: data.workArrangement,
+    }),
+
+    ...(data.salaryMin !== undefined && {
+      salaryMin: data.salaryMin,
+    }),
+
+    ...(data.salaryMax !== undefined && {
+      salaryMax: data.salaryMax,
+    }),
+
+    ...(data.notes !== undefined && {
+      notes: data.notes,
+    }),
+  };
+
+  const statusChanged =
+    data.status !== undefined && data.status !== application.status;
+
+  // check if status changed
+  if (statusChanged) {
+    return prisma.$transaction(async (tx) => {
+      // update application with Prisma
+      const updatedApplication = await tx.application.update({
+        where: {
+          id: application.id,
+        },
+        data: updateData,
+      });
+
+      await tx.applicationActivity.create({
+        data: {
+          applicationId: application.id,
+          type: 'STATUS_CHANGED',
+          fromStatus: application.status,
+          toStatus: data.status!,
+        },
+      });
+
+      return updatedApplication;
+    });
+  }
+
+  return prisma.application.update({
     where: {
       id: application.id,
     },
-    data: {
-      ...(data.company !== undefined && {
-        company: data.company,
-      }),
-
-      ...(data.position !== undefined && {
-        position: data.position,
-      }),
-
-      ...(data.status !== undefined && {
-        status: data.status,
-      }),
-
-      ...(data.appliedAt !== undefined && {
-        appliedAt: data.appliedAt,
-      }),
-
-      ...(data.jobUrl !== undefined && {
-        jobUrl: data.jobUrl,
-      }),
-
-      ...(data.location !== undefined && {
-        location: data.location,
-      }),
-
-      ...(data.employmentType !== undefined && {
-        employmentType: data.employmentType,
-      }),
-
-      ...(data.workArrangement !== undefined && {
-        workArrangement: data.workArrangement,
-      }),
-
-      ...(data.salaryMin !== undefined && {
-        salaryMin: data.salaryMin,
-      }),
-
-      ...(data.salaryMax !== undefined && {
-        salaryMax: data.salaryMax,
-      }),
-
-      ...(data.notes !== undefined && {
-        notes: data.notes,
-      }),
-    },
+    data: updateData,
   });
-
-  return updatedApplication;
 };
 
 export const deleteApplication = async (
