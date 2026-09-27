@@ -50,6 +50,14 @@ export const createApplication = async (
       ...(data.notes !== undefined && {
         notes: data.notes,
       }),
+
+      activities: {
+        create: {
+          type: 'CREATED',
+          fromStatus: null,
+          toStatus: data.status,
+        },
+      },
     },
   });
 };
@@ -235,6 +243,6 @@ export const deleteApplication = async (
   await prisma.application.delete({
     where: {
       id: application.id,
-    }
+    },
   });
 };
