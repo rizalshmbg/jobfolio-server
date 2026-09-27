@@ -58,9 +58,25 @@ model Application {
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  activities ApplicationActivity[]
+
   @@index([userId])
   @@index([userId, status])
   @@map("applications")
+}
+
+model ApplicationActivity {
+  id String @id @default(uuid())
+  applicationId String
+  type ActivityType
+  fromStatus ApplicationStatus?
+  toStatus ApplicationStatus?
+  createdAt DateTime @default(now())
+
+  application Application @relation(fields: [applicationId], references: [id], onDelete: Cascade)
+
+  @@index([applicationId, createdAt])
+  @@map("application_activity")
 }
 
 enum ApplicationStatus {
@@ -86,4 +102,9 @@ enum WorkArrangement {
   ONSITE
   HYBRID
   REMOTE
+}
+
+enum ActivityType {
+  CREATED
+  STATUS_CHANGED
 }
