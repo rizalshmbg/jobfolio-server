@@ -911,6 +911,24 @@ describe('PATCH /api/application/:id', () => {
       status: 'INTERVIEW',
       notes: 'Interview next Monday',
     });
+
+    // check for updated ApplicationActivity
+    const activity = await prisma.applicationActivity.findFirst({
+      where: {
+        applicationId: application.id,
+        type: 'STATUS_CHANGED',
+      },
+    });
+
+    expect(activity).not.toBeNull();
+
+    if (!activity) {
+      throw new Error('Status change activity was not created');
+    }
+
+    expect(activity.fromStatus).toBe(application.status);
+    expect(activity.toStatus).toBe('INTERVIEW');
+    expect(activity.applicationId).toBe(application.id);
   });
 
   it('should persist updated application to database', async () => {
@@ -940,6 +958,59 @@ describe('PATCH /api/application/:id', () => {
       company: 'Updated Company',
       position: 'Frontend Engineer',
     });
+  });
+
+  it('should not create activity when updating fields without changing status', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        notes: 'Updated notes',
+        location: 'Jakarta',
+      });
+
+    const activities = await prisma.applicationActivity.findMany({
+      where: {
+        applicationId: application.id,
+        type: 'STATUS_CHANGED',
+      },
+    });
+
+    expect(activities).toHaveLength(0);
+  });
+
+  it('should not create activity when status remains unchanged', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        status: application.status,
+      });
+
+    const activities = await prisma.applicationActivity.findMany({
+      where: {
+        applicationId: application.id,
+        type: 'STATUS_CHANGED',
+      },
+    });
+
+    expect(activities).toHaveLength(0);
   });
 
   it('should clear nullable fields when value is null', async () => {
