@@ -57,6 +57,24 @@ describe('POST /api/applications', () => {
     expect(application.userId).toBe(user.id);
     expect(application.company).toBe(testApplication.company);
     expect(application.position).toBe(testApplication.position);
+
+    // check for created ApplicationActivity
+    const activity = await prisma.applicationActivity.findFirst({
+      where: {
+        applicationId: application.id,
+      },
+    });
+
+    expect(activity).not.toBeNull();
+
+    if (!activity) {
+      throw new Error('Application activity was not created');
+    }
+
+    expect(activity.type).toBe('CREATED');
+    expect(activity.fromStatus).toBeNull();
+    expect(activity.toStatus).toBe(testApplication.status);
+    expect(activity.applicationId).toBe(application.id);
   });
 
   it('should use authenticated user as application owner', async () => {
@@ -1057,7 +1075,7 @@ describe('PATCH /api/application/:id', () => {
   });
 });
 
-describe('DELTE /api/application/:id', () => {
+describe('DELETE /api/application/:id', () => {
   it('should delete application successfully', async () => {
     const user = await createTestUser();
 
