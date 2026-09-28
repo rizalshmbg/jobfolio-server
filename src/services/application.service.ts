@@ -272,3 +272,20 @@ export const deleteApplication = async (
     },
   });
 };
+
+// APPLICATION ACTIVITIES
+export const getApplicationActivities = async (
+  userId: string,
+  applicationId: string,
+) => {
+  const application = await getApplicationById(userId, applicationId);
+
+  return prisma.applicationActivity.findMany({
+    where: {
+      applicationId: application.id,
+    },
+    orderBy: {
+      createdAt: 'desc',
+    }
+  });
+};
