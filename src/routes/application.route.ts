@@ -3,6 +3,7 @@ import { Router } from 'express';
 import {
   createApplicationController,
   deleteApplicationController,
+  getApplicationActivitiesController,
   getApplicationByIdController,
   getApplicationsController,
   updateApplicationController,
@@ -34,6 +35,14 @@ router.get(
   authMiddleware,
   validateQuery(getApplicationsQuerySchema),
   getApplicationsController,
+);
+
+// APPLICATION ACTIVITIES
+router.get(
+  '/:id/activities',
+  authMiddleware,
+  validateParams(applicationIdParamsSchema),
+  getApplicationActivitiesController,
 );
 
 router.get(
