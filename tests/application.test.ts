@@ -1300,6 +1300,39 @@ describe('DELETE /api/application/:id', () => {
     expect(response.body.message).toBe('Application deleted successfully');
   });
 
+  it('should delete application activities when application is deleted', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    await prisma.applicationActivity.create({
+      data: {
+        applicationId: application.id,
+        type: 'CREATED',
+        fromStatus: null,
+        toStatus: 'APPLIED',
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .delete(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+
+    const activities = await prisma.applicationActivity.findMany({
+      where: {
+        applicationId: application.id,
+      },
+    });
+
+    expect(activities).toHaveLength(0);
+  });
+
   it('should remove application from database', async () => {
     const user = await createTestUser();
 
