@@ -12,6 +12,7 @@ import {
   getApplicationById,
   getApplications,
   updateApplication,
+  getApplicationActivities,
 } from '../services/application.service.js';
 
 export const createApplicationController: RequestHandler = async (req, res) => {
@@ -92,5 +93,28 @@ export const deleteApplicationController: RequestHandler = async (req, res) => {
   res.status(200).json({
     success: true,
     message: 'Application deleted successfully',
+  });
+};
+
+// APPLICATION ACTIVITIES
+export const getApplicationActivitiesController: RequestHandler = async (
+  req,
+  res,
+) => {
+  // get userId
+  const userId = req.user!.userId;
+
+  // get validatedParams
+  const params = req.validatedParams as ApplicationIdParams;
+
+  const activities = await getApplicationActivities(
+    userId,
+    params.id,
+  );
+
+  return res.status(200).json({
+    success: true,
+    message: 'Application activities retrieved successfully',
+    data: activities,
   });
 };
