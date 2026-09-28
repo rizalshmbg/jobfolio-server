@@ -1146,6 +1146,141 @@ describe('PATCH /api/application/:id', () => {
   });
 });
 
+describe('GET /api/applications/:id/activities', () => {
+  it('should get application activities successfully', async () => {
+    const user = await createTestUser();
+
+    const application = await createTestApplication(user.id);
+
+    await prisma.applicationActivity.create({
+      data: {
+        applicationId: application.id,
+        type: 'CREATED',
+        fromStatus: null,
+        toStatus: 'APPLIED',
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    // create STATUS_CHANGED activity
+    await request(app)
+      .patch(`/api/applications/${application.id}`)
+      .set('Authorization', `Bearer ${accessToken}`)
+      .send({
+        status: 'INTERVIEW',
+      });
+
+    const response = await request(app)
+      .get(`/api/applications/${application.id}/activities`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(200);
+    expect(response.body.success).toBe(true);
+    expect(response.body.message).toBe(
+      'Application activities retrieved successfully',
+    );
+
+    expect(response.body.data).toHaveLength(2);
+
+    expect(response.body.data[0]).toMatchObject({
+      applicationId: application.id,
+      type: 'STATUS_CHANGED',
+      fromStatus: 'APPLIED',
+      toStatus: 'INTERVIEW',
+    });
+
+    expect(response.body.data[1]).toMatchObject({
+      applicationId: application.id,
+      type: 'CREATED',
+      fromStatus: null,
+      toStatus: 'APPLIED',
+    });
+  });
+
+  it('should return 404 when application belongs to another user', async () => {
+    const user = await createTestUser();
+
+    const otherUser = await prisma.user.create({
+      data: {
+        name: 'Other User',
+        email: 'other@example.com',
+        password: 'password123',
+      },
+    });
+
+    const otherApplication = await createTestApplication(otherUser.id);
+
+    await prisma.applicationActivity.create({
+      data: {
+        applicationId: otherApplication.id,
+        type: 'CREATED',
+        fromStatus: null,
+        toStatus: 'APPLIED',
+      },
+    });
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get(`/api/applications/${otherApplication.id}/activities`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Application not found');
+  });
+
+  it('should return 404 when application does not exist', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const nonExistingId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app)
+      .get(`/api/applications/${nonExistingId}/activities`)
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(404);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Application not found');
+  });
+
+  it('should return 400 when application id is invalid', async () => {
+    const user = await createTestUser();
+
+    const accessToken = generateAccessToken({
+      userId: user.id,
+    });
+
+    const response = await request(app)
+      .get('/api/applications/invalid-id/activities')
+      .set('Authorization', `Bearer ${accessToken}`);
+
+    expect(response.status).toBe(400);
+    expect(response.body.success).toBe(false);
+  });
+
+  it('should return 401 when user is not authenticated', async () => {
+    const applicationId = '550e8400-e29b-41d4-a716-446655440000';
+
+    const response = await request(app).get(
+      `/api/applications/${applicationId}/activities`,
+    );
+
+    expect(response.status).toBe(401);
+    expect(response.body.success).toBe(false);
+    expect(response.body.message).toBe('Unauthorized');
+  });
+});
+
 describe('DELETE /api/application/:id', () => {
   it('should delete application successfully', async () => {
     const user = await createTestUser();
