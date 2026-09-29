@@ -1,7 +1,14 @@
 import type { RequestHandler } from 'express';
 
-import { getProfile, updateProfile } from '../services/profile.service.js';
-import type { UpdateProfileInput } from '../validations/profile.validation.js';
+import {
+  changePassword,
+  getProfile,
+  updateProfile,
+} from '../services/profile.service.js';
+import type {
+  ChangePasswordInput,
+  UpdateProfileInput,
+} from '../validations/profile.validation.js';
 
 export const getProfileController: RequestHandler = async (req, res) => {
   const userId = req.user!.userId;
@@ -25,5 +32,17 @@ export const updateProfileController: RequestHandler = async (req, res) => {
     success: true,
     message: 'Profile updated successfully',
     data: result,
+  });
+};
+
+export const changePasswordController: RequestHandler = async (req, res) => {
+  const userId = req.user!.userId;
+  const data = req.body as ChangePasswordInput;
+
+  await changePassword(userId, data);
+
+  res.status(200).json({
+    success: true,
+    message: 'Password changed successfully',
   });
 };
