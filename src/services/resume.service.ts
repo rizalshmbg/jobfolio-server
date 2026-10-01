@@ -131,7 +131,7 @@ export const uploadResume = async (userId: string, file: ResumeFile) => {
       },
     });
 
-    if (existingResume?.filePath) {
+    if (existingResume?.filePath && existingResume.filePath !== filePath) {
       const { error: deleteError } = await supabase.storage
         .from(env.SUPABASE_RESUME_BUCKET)
         .remove([existingResume.filePath]);
