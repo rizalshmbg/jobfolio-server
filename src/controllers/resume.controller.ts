@@ -1,6 +1,10 @@
 import type { RequestHandler } from 'express';
 
-import { getResume, uploadResume } from '../services/resume.service.js';
+import {
+  getResume,
+  uploadResume,
+  deleteResume,
+} from '../services/resume.service.js';
 
 export const getResumeController: RequestHandler = async (req, res) => {
   const userId = req.user!.userId;
@@ -32,5 +36,16 @@ export const uploadResumeController: RequestHandler = async (req, res) => {
     success: true,
     message: 'Resume uploaded successfully',
     data: result,
+  });
+};
+
+export const deleteResumeController: RequestHandler = async (req, res) => {
+  const userId = req.user!.userId;
+
+  await deleteResume(userId);
+
+  res.status(200).json({
+    success: true,
+    message: 'Resume deleted successfully',
   });
 };
