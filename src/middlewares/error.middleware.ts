@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler } from 'express';
+import multer from 'multer';
 import { ZodError } from 'zod';
 
 import { AppError } from '../errors/app-error.js';
@@ -13,11 +14,27 @@ export const errorMiddleware: ErrorRequestHandler = (
   if (error instanceof ZodError) {
     res.status(400).json({
       success: false,
-      message: "Validation error",
+      message: 'Validation error',
       errors: error.issues.map((issue) => ({
         field: issue.path.join('.'),
         message: issue.message,
       })),
+    });
+    return;
+  }
+
+  if (error instanceof multer.MulterError) {
+    if (error.code === 'LIMIT_FILE_SIZE') {
+      res.status(400).json({
+        success: false,
+        message: 'Resume file size must not exceed 5 MB',
+      });
+      return;
+    }
+
+    res.status(400).json({
+      success: false,
+      message: 'Invalid resume upload',
     });
     return;
   }
