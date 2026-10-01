@@ -1,5 +1,7 @@
 import multer from 'multer';
 
+import { AppError } from '../errors/app-error.js';
+
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
 const ALLOWED_MIME_TYPES = [
@@ -15,7 +17,7 @@ export const uploadResumeMiddleware = multer({
   },
   fileFilter: (_req, file, callback) => {
     if (!ALLOWED_MIME_TYPES.includes(file.mimetype)) {
-      callback(new Error('Resume file must be PDF, DOC, or DOCX'));
+      callback(new AppError(400, 'Resume file must be PDF, DOC, or DOCX'));
 
       return;
     }
