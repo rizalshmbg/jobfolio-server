@@ -30,6 +30,7 @@ export const getResume = async (userId: string) => {
     select: {
       id: true,
       fileName: true,
+      filePath: true,
       mimeType: true,
       fileSize: true,
       createdAt: true,
@@ -41,7 +42,23 @@ export const getResume = async (userId: string) => {
     throw new AppError(404, 'Resume not found');
   }
 
-  return resume;
+  const { data, error } = await supabase.storage
+    .from(env.SUPABASE_RESUME_BUCKET)
+    .createSignedUrl(resume.filePath, 60 * 60);
+
+  if (error || !data?.signedUrl) {
+    throw new AppError(500, 'Failed to generate resume URL');
+  }
+
+  return {
+    id: resume.id,
+    fileName: resume.fileName,
+    mimeType: resume.mimeType,
+    fileSize: resume.fileSize,
+    url: data.signedUrl,
+    createdAt: resume.createdAt,
+    updatedAt: resume.updatedAt,
+  };
 };
 
 export const uploadResume = async (userId: string, file: ResumeFile) => {
@@ -78,7 +95,7 @@ export const uploadResume = async (userId: string, file: ResumeFile) => {
     .from(env.SUPABASE_RESUME_BUCKET)
     .upload(filePath, file.buffer, {
       contentType: file.mimetype,
-      upsert: false,
+      upsert: true,
     });
 
   if (uploadError) {
