@@ -20,6 +20,10 @@ const envSchema = z.object({
     JWT_SECRET: z.string().min(64, 'JWT_SECRET must be at least 64 characters'),
 
     CLIENT_URL: z.url(),
+
+    SUPABASE_URL: z.url(),
+    SUPABASE_SECRET_KEY: z.string().min(1),
+    SUPABASE_RESUME_BUCKET: z.string().min(1).default('jobfolio-resumes'),
 });
 
 export const env = envSchema.parse(process.env);
