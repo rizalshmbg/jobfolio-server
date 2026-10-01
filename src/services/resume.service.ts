@@ -25,7 +25,7 @@ type ResumeFile = {
 export const getResume = async (userId: string) => {
   const resume = await prisma.resume.findUnique({
     where: {
-      id: userId,
+      userId,
     },
     select: {
       id: true,
@@ -79,7 +79,7 @@ export const uploadResume = async (userId: string, file: ResumeFile) => {
 
   const existingResume = await prisma.resume.findUnique({
     where: {
-      id: userId,
+      userId,
     },
     select: {
       id: true,
@@ -139,9 +139,9 @@ export const uploadResume = async (userId: string, file: ResumeFile) => {
       if (deleteError) {
         console.error('Failed to delete old resume:', deleteError);
       }
-
-      return resume;
     }
+
+    return resume;
   } catch (error) {
     await supabase.storage.from(env.SUPABASE_RESUME_BUCKET).remove([filePath]);
 
@@ -152,7 +152,7 @@ export const uploadResume = async (userId: string, file: ResumeFile) => {
 export const deleteResume = async (userId: string) => {
   const resume = await prisma.resume.findUnique({
     where: {
-      id: userId,
+      userId,
     },
     select: {
       id: true,
