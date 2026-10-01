@@ -131,3 +131,33 @@ export const uploadResume = async (userId: string, file: ResumeFile) => {
     throw error;
   }
 };
+
+export const deleteResume = async (userId: string) => {
+  const resume = await prisma.resume.findUnique({
+    where: {
+      id: userId,
+    },
+    select: {
+      id: true,
+      filePath: true,
+    },
+  });
+
+  if (!resume) {
+    throw new AppError(404, 'Resume not found');
+  }
+
+  const { error: deleteStorageError } = await supabase.storage
+    .from(env.SUPABASE_RESUME_BUCKET)
+    .remove([resume.filePath]);
+
+  if (deleteStorageError) {
+    throw new AppError(500, 'Failed to delete resume file');
+  }
+
+  await prisma.resume.delete({
+    where: {
+      id: resume.id,
+    },
+  });
+};
