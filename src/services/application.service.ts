@@ -19,6 +19,14 @@ export const createApplication = async (
       position: data.position,
       status: data.status,
 
+      ...(data.description !== undefined && {
+        description: data.description,
+      }),
+
+      ...(data.requirements !== undefined && {
+        requirements: data.requirements,
+      }),
+
       ...(data.appliedAt !== undefined && {
         appliedAt: data.appliedAt,
       }),
@@ -188,6 +196,14 @@ export const updateApplication = async (
       position: data.position,
     }),
 
+    ...(data.description !== undefined && {
+      description: data.description,
+    }),
+
+    ...(data.requirements !== undefined && {
+      requirements: data.requirements,
+    }),
+
     ...(data.status !== undefined && {
       status: data.status,
     }),
@@ -286,6 +302,6 @@ export const getApplicationActivities = async (
     },
     orderBy: {
       createdAt: 'desc',
-    }
+    },
   });
 };
