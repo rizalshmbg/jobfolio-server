@@ -24,6 +24,8 @@ export const workArrangementSchema = z.enum(['ONSITE', 'HYBRID', 'REMOTE']);
 export const applicationBaseSchema = z.object({
   company: z.string().trim().min(1).max(100),
   position: z.string().trim().min(1).max(100),
+  description: z.string().trim().max(2000).optional(),
+  requirements: z.array(z.string().trim().min(1)).optional(),
   status: applicationStatusSchema,
   appliedAt: z.coerce.date().optional(),
   jobUrl: z.url().optional(),
