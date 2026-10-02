@@ -44,6 +44,8 @@ model Application {
   id              String            @id @default(uuid())
   company         String
   position        String
+  description     String?
+  requirements    Json?
   status          ApplicationStatus @default(APPLIED)
   appliedAt       DateTime?
   jobUrl          String?
