@@ -55,6 +55,8 @@ export const createApplicationSchema = applicationBaseSchema
 export type CreateApplicationInput = z.infer<typeof createApplicationSchema>;
 
 export const updateApplicationSchema = applicationBaseSchema.partial().extend({
+  description: z.string().trim().max(2000).nullable().optional(),
+  requirements: z.array(z.string().trim().min(1)).nullable().optional(),
   appliedAt: z.coerce.date().nullable().optional(),
   jobUrl: z.url().nullable().optional(),
   location: z.string().trim().max(100).nullable().optional(),
@@ -66,7 +68,6 @@ export const updateApplicationSchema = applicationBaseSchema.partial().extend({
 });
 
 export type UpdateApplicationInput = z.infer<typeof updateApplicationSchema>;
-
 
 export const getApplicationsQuerySchema = z.object({
   page: z.coerce.number().int().positive().default(1),
@@ -90,7 +91,6 @@ export const getApplicationsQuerySchema = z.object({
 });
 
 export type GetApplicationsQuery = z.infer<typeof getApplicationsQuerySchema>;
-
 
 export const applicationIdParamsSchema = z.object({
   id: z.uuid(),
