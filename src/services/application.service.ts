@@ -5,7 +5,7 @@ import type {
   GetApplicationsQuery,
   UpdateApplicationInput,
 } from '../validations/application.validation.js';
-import type { Prisma } from '../generated/prisma/client.js';
+import { Prisma } from '../generated/prisma/client.js';
 import { AppError } from '../errors/app-error.js';
 
 export const createApplication = async (
@@ -201,7 +201,9 @@ export const updateApplication = async (
     }),
 
     ...(data.requirements !== undefined && {
-      requirements: data.requirements,
+      requirements: data.requirements === null
+        ? Prisma.JsonNull
+        : data.requirements,
     }),
 
     ...(data.status !== undefined && {
