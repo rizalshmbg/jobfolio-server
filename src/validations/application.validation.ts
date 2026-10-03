@@ -18,8 +18,10 @@ export const employmentTypeSchema = z.enum([
   'INTERNSHIP',
   'FREELANCE',
 ]);
+export type EmploymentType = z.infer<typeof employmentTypeSchema>;
 
 export const workArrangementSchema = z.enum(['ONSITE', 'HYBRID', 'REMOTE']);
+export type WorkArrangement = z.infer<typeof workArrangementSchema>;
 
 export const applicationBaseSchema = z.object({
   company: z.string().trim().min(1).max(100),
