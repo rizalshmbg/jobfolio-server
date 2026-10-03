@@ -24,6 +24,8 @@ const envSchema = z.object({
     SUPABASE_URL: z.url(),
     SUPABASE_SECRET_KEY: z.string().min(1),
     SUPABASE_RESUME_BUCKET: z.string().min(1).default('jobfolio-resumes'),
+
+    JOB_SCRAPER_URL: z.url(),
 });
 
 export const env = envSchema.parse(process.env);
