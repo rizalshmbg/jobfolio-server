@@ -7,6 +7,10 @@ type JobScraperResponse<T> = {
   data?: T;
 };
 
+type JobScraperErrorResponse = {
+  detail?: string;
+};
+
 export type ScrapedJob = {
   company: string | null;
   position: string | null;
@@ -31,9 +35,7 @@ const SCRAPER_TIMEOUT_MS = 15_000;
 export const scrapeJob = async (url: string): Promise<ScrapedJob> => {
   const controller = new AbortController();
 
-  const timeout = setTimeout(() => {
-    controller.abort();
-  }, SCRAPER_TIMEOUT_MS);
+  const timeout = setTimeout(() => controller.abort(), SCRAPER_TIMEOUT_MS);
 
   try {
     const response = await fetch(`${env.JOB_SCRAPER_URL}/scrape`, {
@@ -45,33 +47,44 @@ export const scrapeJob = async (url: string): Promise<ScrapedJob> => {
       signal: controller.signal,
     });
 
-    let body: JobScraperResponse<ScrapedJob> | null = null;
+    let body: unknown;
 
     try {
-      body = (await response.json()) as JobScraperResponse<ScrapedJob>;
+      body = await response.json();
     } catch {
       throw new AppError(502, 'Job scraper returned an invalid response');
     }
 
     if (!response.ok) {
+      const errorBody = body as {
+        detail?: unknown;
+      };
+
+      const message =
+        typeof errorBody.detail === 'string'
+          ? errorBody.detail
+          : 'Unable to scrape job page';
+
       throw new AppError(
         response.status === 400
           ? 422
           : response.status >= 500
             ? 502
             : response.status,
-        body.message || 'Unable to scrape job page',
+        message,
       );
     }
 
-    if (!body.success || !body.data) {
+    const successBody = body as JobScraperResponse<ScrapedJob>;
+
+    if (!successBody.success || !successBody.data) {
       throw new AppError(
         422,
-        body.message || 'Unable to extract job information',
+        successBody.message || 'Unable to extract job information',
       );
     }
 
-    return body.data;
+    return successBody.data;
   } catch (error) {
     if (error instanceof AppError) {
       throw error;
