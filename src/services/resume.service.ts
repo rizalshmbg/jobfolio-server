@@ -178,3 +178,39 @@ export const deleteResume = async (userId: string) => {
     },
   });
 };
+
+// for python get resume file via supabase
+export const getResumeFile = async (userId: string) => {
+  const resume = await prisma.resume.findUnique({
+    where: {
+      userId,
+    },
+    select: {
+      fileName: true,
+      filePath: true,
+      mimeType: true,
+      fileSize: true,
+    },
+  });
+
+  if (!resume) {
+    throw new AppError(404, 'Resume not found');
+  }
+
+  const { data, error } = await supabase.storage
+    .from(env.SUPABASE_RESUME_BUCKET)
+    .download(resume.filePath);
+
+  if (error || !data) {
+    throw new AppError(500, 'Failed to download resume file');
+  }
+
+  const buffer = Buffer.from(await data.arrayBuffer());
+
+  return {
+    fileName: resume.fileName,
+    mimeType: resume.mimeType,
+    fileSize: resume.fileSize,
+    buffer,
+  };
+};
