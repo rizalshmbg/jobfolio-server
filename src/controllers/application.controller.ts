@@ -1,4 +1,5 @@
-import type { RequestHandler } from 'express';
+import type { Response } from 'express';
+import type { CustomRequest } from '../types/express.js';
 import {
   type ApplicationIdParams,
   type CreateApplicationInput,
@@ -15,7 +16,10 @@ import {
   getApplicationActivities,
 } from '../services/application.service.js';
 
-export const createApplicationController: RequestHandler = async (req, res) => {
+export const createApplicationController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
   const data = req.body as CreateApplicationInput;
 
@@ -28,7 +32,10 @@ export const createApplicationController: RequestHandler = async (req, res) => {
   });
 };
 
-export const getApplicationsController: RequestHandler = async (req, res) => {
+export const getApplicationsController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const query = req.validatedQuery as GetApplicationsQuery;
 
   const result = await getApplications(req.user!.userId, query);
@@ -41,9 +48,9 @@ export const getApplicationsController: RequestHandler = async (req, res) => {
   });
 };
 
-export const getApplicationByIdController: RequestHandler = async (
-  req,
-  res,
+export const getApplicationByIdController = async (
+  req: CustomRequest,
+  res: Response,
 ) => {
   // get validatedParams
   const params = req.validatedParams as ApplicationIdParams;
@@ -62,7 +69,10 @@ export const getApplicationByIdController: RequestHandler = async (
   });
 };
 
-export const updateApplicationController: RequestHandler = async (req, res) => {
+export const updateApplicationController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   // validated params
   const params = req.validatedParams as ApplicationIdParams;
 
@@ -83,7 +93,10 @@ export const updateApplicationController: RequestHandler = async (req, res) => {
   });
 };
 
-export const deleteApplicationController: RequestHandler = async (req, res) => {
+export const deleteApplicationController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const params = req.validatedParams as ApplicationIdParams;
 
   const userId = req.user!.userId;
@@ -97,9 +110,9 @@ export const deleteApplicationController: RequestHandler = async (req, res) => {
 };
 
 // APPLICATION ACTIVITIES
-export const getApplicationActivitiesController: RequestHandler = async (
-  req,
-  res,
+export const getApplicationActivitiesController = async (
+  req: CustomRequest,
+  res: Response,
 ) => {
   // get userId
   const userId = req.user!.userId;
@@ -107,10 +120,7 @@ export const getApplicationActivitiesController: RequestHandler = async (
   // get validatedParams
   const params = req.validatedParams as ApplicationIdParams;
 
-  const activities = await getApplicationActivities(
-    userId,
-    params.id,
-  );
+  const activities = await getApplicationActivities(userId, params.id);
 
   return res.status(200).json({
     success: true,

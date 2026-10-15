@@ -1,4 +1,5 @@
-import type { RequestHandler } from 'express';
+import type { Response } from 'express';
+import type { CustomRequest } from '../types/express.js';
 
 import {
   getResume,
@@ -6,7 +7,10 @@ import {
   deleteResume,
 } from '../services/resume.service.js';
 
-export const getResumeController: RequestHandler = async (req, res) => {
+export const getResumeController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
 
   const result = await getResume(userId);
@@ -18,7 +22,10 @@ export const getResumeController: RequestHandler = async (req, res) => {
   });
 };
 
-export const uploadResumeController: RequestHandler = async (req, res) => {
+export const uploadResumeController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
 
   if (!req.file) {
@@ -39,7 +46,10 @@ export const uploadResumeController: RequestHandler = async (req, res) => {
   });
 };
 
-export const deleteResumeController: RequestHandler = async (req, res) => {
+export const deleteResumeController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
 
   await deleteResume(userId);

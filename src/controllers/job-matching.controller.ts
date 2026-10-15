@@ -1,9 +1,13 @@
-import type { RequestHandler } from 'express';
+import type { Response } from 'express';
+import type { CustomRequest } from '../types/express.js';
 
 import type { ApplicationIdParams } from '../validations/application.validation.js';
 import { matchApplication } from '../services/job-matching.service.js';
 
-export const matchApplicationController: RequestHandler = async (req, res) => {
+export const matchApplicationController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const params = req.validatedParams as ApplicationIdParams;
 
   const userId = req.user!.userId;

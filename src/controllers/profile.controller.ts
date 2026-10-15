@@ -1,4 +1,5 @@
-import type { RequestHandler } from 'express';
+import type { Response } from 'express';
+import type { CustomRequest } from '../types/express.js';
 
 import {
   changePassword,
@@ -10,7 +11,10 @@ import type {
   UpdateProfileInput,
 } from '../validations/profile.validation.js';
 
-export const getProfileController: RequestHandler = async (req, res) => {
+export const getProfileController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
 
   const result = await getProfile(userId);
@@ -22,7 +26,10 @@ export const getProfileController: RequestHandler = async (req, res) => {
   });
 };
 
-export const updateProfileController: RequestHandler = async (req, res) => {
+export const updateProfileController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
   const data = req.body as UpdateProfileInput;
 
@@ -35,7 +42,10 @@ export const updateProfileController: RequestHandler = async (req, res) => {
   });
 };
 
-export const changePasswordController: RequestHandler = async (req, res) => {
+export const changePasswordController = async (
+  req: CustomRequest,
+  res: Response,
+) => {
   const userId = req.user!.userId;
   const data = req.body as ChangePasswordInput;
 
