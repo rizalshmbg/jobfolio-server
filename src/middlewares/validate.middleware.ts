@@ -1,4 +1,4 @@
-import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import type { NextFunction, RequestHandler, Response } from 'express';
 import type { CustomRequest } from '../types/express.js';
 import type { ZodType } from 'zod';
 
