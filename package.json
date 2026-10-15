@@ -24,7 +24,7 @@
       "onFail": "download"
     }
   },
-  "packageManager": "pnpm@12.4.1",
+  "packageManager": "pnpm@10.8.1",
   "type": "module",
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
