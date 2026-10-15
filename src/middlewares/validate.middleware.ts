@@ -1,8 +1,9 @@
 import type { NextFunction, Request, RequestHandler, Response } from 'express';
+import type { CustomRequest } from '../types/express.js';
 import type { ZodType } from 'zod';
 
 export const validate = (schema: ZodType) => {
-  return (req: Request, _res: Response, next: NextFunction) => {
+  return (req: CustomRequest, _res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.body);
 
     if (!result.success) {
@@ -18,7 +19,7 @@ export const validate = (schema: ZodType) => {
 
 export const validateQuery =
   (schema: ZodType): RequestHandler =>
-  (req, _res, next) => {
+  (req: CustomRequest, _res: Response, next: NextFunction) => {
     const result = schema.safeParse(req.query);
 
     if (!result.success) {
@@ -31,15 +32,17 @@ export const validateQuery =
     next();
   };
 
-export const validateParams = (schema: ZodType): RequestHandler => (req, _res, next) => {
-  const result = schema.safeParse(req.params);
+export const validateParams =
+  (schema: ZodType): RequestHandler =>
+  (req: CustomRequest, _res: Response, next: NextFunction) => {
+    const result = schema.safeParse(req.params);
 
-  if (!result.success) {
-    next(result.error);
-    return;
-  }
+    if (!result.success) {
+      next(result.error);
+      return;
+    }
 
-  req.validatedParams = result.data;
+    req.validatedParams = result.data;
 
-  next();
-}
+    next();
+  };

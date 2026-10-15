@@ -1,9 +1,11 @@
-import type { RequestHandler } from 'express';
+import type { RequestHandler, Response, NextFunction } from 'express';
+
+import type { CustomRequest } from '../types/express.js';
 
 import { AppError } from '../errors/app-error.js';
 import { verifyAccessToken } from '../utils/jwt.js';
 
-export const authMiddleware: RequestHandler = (req, _res, next) => {
+export const authMiddleware: RequestHandler = (req: CustomRequest, _res: Response, next: NextFunction) => {
   // Authorization: Bearer <accessToken>
   const authorization = req.headers.authorization;
 
