@@ -6,7 +6,7 @@ import { REFRESH_TOKEN_TTL_MS } from '../utils/refresh-token.js';
 export const refreshTokenCookieBaseOptions: CookieOptions = {
   httpOnly: true,
   secure: env.NODE_ENV === 'production',
-  sameSite: 'lax',
+  sameSite: env.NODE_ENV === 'production' ? 'none' : 'lax',
   path: '/api/auth',
 };
 
